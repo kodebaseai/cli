@@ -73,7 +73,7 @@
     "@kodebase/typescript-config": "workspace:*",
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.3",
-    "@vitest/coverage-istanbul": "^3.0.7",
+    "@vitest/coverage-istanbul": "^4.0.8",
     "execa": "^9.6.0",
     "ink-testing-library": "^4.0.0",
     "memfs": "^4.17.2",
