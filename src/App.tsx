@@ -7,6 +7,7 @@
 import type { TArtifactEvent } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
+import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
 import { ErrorHandler, Help, Version } from "./components/index.js";
 
@@ -33,6 +34,34 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
     !command
   ) {
     return <Help />;
+  }
+
+  // Handle start command
+  if (command === "start") {
+    // Parse artifact ID (first non-flag argument)
+    const artifactId = commandArgs.find((arg) => !arg.startsWith("--"));
+
+    // Parse flags
+    const submit = commandArgs.includes("--submit");
+
+    // Validate: artifact ID is required
+    if (!artifactId) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={new Error("Artifact ID is required")}
+            verbose={verbose}
+          />
+          <Box marginTop={1}>
+            <Text color="gray" dimColor>
+              Usage: kb start &lt;artifact-id&gt; [--submit]
+            </Text>
+          </Box>
+        </Box>
+      );
+    }
+
+    return <Start artifactId={artifactId} submit={submit} verbose={verbose} />;
   }
 
   // Handle status command

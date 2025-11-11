@@ -59,6 +59,7 @@
     "@kodebase/git-ops": "workspace:*",
     "@types/ink-select-input": "^3.0.5",
     "@types/ink-spinner": "^3.0.5",
+    "clipboardy": "^5.0.0",
     "glob": "^11.0.0",
     "ink": "^5.0.1",
     "ink-select-input": "^6.2.0",

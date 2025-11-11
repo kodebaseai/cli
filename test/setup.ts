@@ -5,6 +5,13 @@
 
 import { vi } from "vitest";
 
+// Fix for Node 24 console.Console constructor issue with patch-console
+// This mock prevents Ink from trying to patch the console in tests
+if (typeof globalThis.console.Console === "undefined") {
+  // @ts-expect-error - Mocking console.Console for Node 24 compatibility
+  globalThis.console.Console = class MockConsole {};
+}
+
 beforeEach(() => {
   // Use fake timers for deterministic test execution
   vi.useFakeTimers();

@@ -26,6 +26,18 @@ export const Help: FC = () => {
       <Box marginLeft={2} flexDirection="column">
         <Text>
           <Text color="green" bold>
+            start &lt;artifact-id&gt;{" "}
+          </Text>
+          <Text color="gray">Start work on an artifact</Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
+            status &lt;artifact-id&gt;{" "}
+          </Text>
+          <Text color="gray">Display artifact status information</Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
             version, --version, -v{" "}
           </Text>
           <Text color="gray">Display version information</Text>
