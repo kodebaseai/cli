@@ -26,19 +26,18 @@ afterEach(() => {
 
 describe("PerformanceTimer", () => {
   describe("complete()", () => {
-    it("should measure elapsed time accurately", async () => {
+    it("should measure elapsed time accurately", () => {
+      const mock = mockPerformanceNow(0, 25);
       const timer = new PerformanceTimer("test-operation");
-
-      // Wait a small amount
-      await new Promise((resolve) => setTimeout(resolve, 5));
 
       const metrics = timer.complete();
 
       expect(metrics.operation).toBe("test-operation");
-      expect(metrics.duration).toBeGreaterThanOrEqual(5);
-      expect(metrics.duration).toBeLessThan(50);
+      expect(metrics.duration).toBe(25);
       expect(metrics.endTime).toBeGreaterThan(metrics.startTime);
       expect(metrics.exceedsThreshold).toBe(false);
+
+      mock.mockRestore();
     });
 
     it("should mark as exceeds threshold when duration > 100ms", () => {
@@ -128,17 +127,17 @@ describe("PerformanceTimer", () => {
 
 describe("measurePerformance", () => {
   it("should measure async operation and return result with metrics", async () => {
-    const asyncFn = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      return "test-result";
-    };
+    const mock = mockPerformanceNow(0, 15);
+    const asyncFn = async () => "test-result";
 
     const { result, metrics } = await measurePerformance("async-test", asyncFn);
 
     expect(result).toBe("test-result");
     expect(metrics.operation).toBe("async-test");
-    expect(metrics.duration).toBeGreaterThanOrEqual(10);
+    expect(metrics.duration).toBe(15);
     expect(metrics.exceedsThreshold).toBe(false);
+
+    mock.mockRestore();
   });
 
   it("should handle fast operations correctly", async () => {
@@ -152,16 +151,16 @@ describe("measurePerformance", () => {
   });
 
   it("should detect slow operations", async () => {
-    const slowFn = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 110));
-      return "slow-result";
-    };
+    const mock = mockPerformanceNow(0, 150);
+    const slowFn = async () => "slow-result";
 
     const { result, metrics } = await measurePerformance("slow-async", slowFn);
 
     expect(result).toBe("slow-result");
-    expect(metrics.duration).toBeGreaterThanOrEqual(110);
+    expect(metrics.duration).toBe(150);
     expect(metrics.exceedsThreshold).toBe(true);
+
+    mock.mockRestore();
   });
 
   it("should attach performance info to errors", async () => {

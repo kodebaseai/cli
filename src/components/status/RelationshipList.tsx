@@ -16,14 +16,6 @@ export const RelationshipList: FC<RelationshipListProps> = ({
   blockedBy,
   currentStatus,
 }) => {
-  if (blocks.length === 0 && blockedBy.length === 0) {
-    return (
-      <Box marginTop={1}>
-        <Text dimColor>No relationships</Text>
-      </Box>
-    );
-  }
-
   // Determine if dependencies are resolved based on status
   const isBlocked = currentStatus === "blocked";
   const isCompleted = currentStatus === "completed";
@@ -32,42 +24,22 @@ export const RelationshipList: FC<RelationshipListProps> = ({
   const dependenciesResolved = isCompleted || isInProgress;
 
   return (
-    <Box flexDirection="column" marginTop={1}>
-      <Text bold>Relationships:</Text>
-
+    <Box flexDirection="column">
       {blockedBy.length > 0 && (
-        <Box flexDirection="column" marginTop={1}>
-          <Box flexDirection="row" gap={1}>
-            <Text
-              color={
-                isBlocked ? "red" : dependenciesResolved ? "green" : "gray"
-              }
-              bold
-            >
-              {isBlocked ? "Blocked by:" : "Dependencies:"}
+        <Box flexDirection="row" gap={1}>
+          <Text>{isBlocked ? "Blocked by:" : "Dependencies"}</Text>
+          {blockedBy.map((id, index) => (
+            <Text key={id} color={dependenciesResolved ? "green" : "red"}>
+              {dependenciesResolved ? "✓" : "✗"} {id}
+              {index < blockedBy.length - 1 ? "," : ""}
             </Text>
-            {dependenciesResolved && <Text color="green">✓</Text>}
-          </Box>
-          {blockedBy.map((id) => (
-            <Box key={id} marginLeft={2} marginTop={1}>
-              <Text color={dependenciesResolved ? "green" : undefined}>
-                • {id} {dependenciesResolved && "(resolved)"}
-              </Text>
-            </Box>
           ))}
         </Box>
       )}
 
       {blocks.length > 0 && (
-        <Box flexDirection="column" marginTop={1}>
-          <Text color="yellow" bold>
-            Blocks:
-          </Text>
-          {blocks.map((id) => (
-            <Box key={id} marginLeft={2} marginTop={1}>
-              <Text>• {id}</Text>
-            </Box>
-          ))}
+        <Box flexDirection="row">
+          <Text>Blocks: {blocks.join(", ")}</Text>
         </Box>
       )}
     </Box>

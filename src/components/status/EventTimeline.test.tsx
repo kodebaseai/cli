@@ -23,7 +23,7 @@ describe("EventTimeline event display", () => {
   });
 
   describe("event rendering", () => {
-    it("displays events with timestamps, actors, and triggers", () => {
+    it("displays events with timestamps and actors", () => {
       const events = [
         {
           timestamp: new Date().toISOString(),
@@ -38,7 +38,7 @@ describe("EventTimeline event display", () => {
       expect(lastFrame()).toContain("Event History:");
       expect(lastFrame()).toContain("ready");
       expect(lastFrame()).toContain("Miguel Carvalho");
-      expect(lastFrame()).toContain("dependencies_met");
+      expect(lastFrame()).not.toContain("dependencies_met");
     });
 
     it("displays events without trigger when trigger is not provided", () => {
@@ -127,23 +127,25 @@ describe("EventTimeline event display", () => {
 
   describe("timestamp formatting", () => {
     it('formats recent events as "Just now"', () => {
+      const currentTime = new Date("2025-01-01T12:00:00Z");
       const events = [
         {
-          timestamp: new Date().toISOString(),
+          timestamp: new Date("2025-01-01T12:00:00Z").toISOString(),
           event: "ready",
           actor: "Miguel Carvalho",
         },
       ];
 
-      const { lastFrame } = render(<EventTimeline events={events} />);
+      const { lastFrame } = render(
+        <EventTimeline events={events} currentTime={currentTime} />,
+      );
 
       expect(lastFrame()).toContain("Just now");
     });
 
     it('formats events within 24 hours as "Xh ago"', () => {
-      const twoHoursAgo = new Date(
-        Date.now() - 2 * 60 * 60 * 1000,
-      ).toISOString();
+      const currentTime = new Date("2025-01-01T12:00:00Z");
+      const twoHoursAgo = new Date("2025-01-01T10:00:00Z").toISOString();
       const events = [
         {
           timestamp: twoHoursAgo,
@@ -152,15 +154,16 @@ describe("EventTimeline event display", () => {
         },
       ];
 
-      const { lastFrame } = render(<EventTimeline events={events} />);
+      const { lastFrame } = render(
+        <EventTimeline events={events} currentTime={currentTime} />,
+      );
 
-      expect(lastFrame()).toMatch(/\d+h ago/);
+      expect(lastFrame()).toContain("2h ago");
     });
 
     it('formats events older than 24 hours as "Xd ago"', () => {
-      const twoDaysAgo = new Date(
-        Date.now() - 2 * 24 * 60 * 60 * 1000,
-      ).toISOString();
+      const currentTime = new Date("2025-01-03T12:00:00Z");
+      const twoDaysAgo = new Date("2025-01-01T12:00:00Z").toISOString();
       const events = [
         {
           timestamp: twoDaysAgo,
@@ -169,14 +172,16 @@ describe("EventTimeline event display", () => {
         },
       ];
 
-      const { lastFrame } = render(<EventTimeline events={events} />);
+      const { lastFrame } = render(
+        <EventTimeline events={events} currentTime={currentTime} />,
+      );
 
-      expect(lastFrame()).toMatch(/\d+d ago/);
+      expect(lastFrame()).toContain("2d ago");
     });
   });
 
   describe("event icons", () => {
-    it("displays ✓ icon for ready and completed events", () => {
+    it("displays ○ icon for ready events", () => {
       const events = [
         {
           timestamp: new Date().toISOString(),
@@ -187,10 +192,10 @@ describe("EventTimeline event display", () => {
 
       const { lastFrame } = render(<EventTimeline events={events} />);
 
-      expect(lastFrame()).toContain("✓");
+      expect(lastFrame()).toContain("○");
     });
 
-    it("displays → icon for transition events", () => {
+    it("displays ◎ icon for in_progress events", () => {
       const events = [
         {
           timestamp: new Date().toISOString(),
@@ -201,10 +206,10 @@ describe("EventTimeline event display", () => {
 
       const { lastFrame } = render(<EventTimeline events={events} />);
 
-      expect(lastFrame()).toContain("→");
+      expect(lastFrame()).toContain("◎");
     });
 
-    it("displays ⚠ icon for blocked and cancelled events", () => {
+    it("displays ◇ icon for blocked events", () => {
       const events = [
         {
           timestamp: new Date().toISOString(),
@@ -215,10 +220,10 @@ describe("EventTimeline event display", () => {
 
       const { lastFrame } = render(<EventTimeline events={events} />);
 
-      expect(lastFrame()).toContain("⚠");
+      expect(lastFrame()).toContain("◇");
     });
 
-    it("displays ⊙ icon for draft and artifact_created events", () => {
+    it("displays ◌ icon for draft and artifact_created events", () => {
       const events = [
         {
           timestamp: new Date().toISOString(),
@@ -229,7 +234,7 @@ describe("EventTimeline event display", () => {
 
       const { lastFrame } = render(<EventTimeline events={events} />);
 
-      expect(lastFrame()).toContain("⊙");
+      expect(lastFrame()).toContain("◌");
     });
   });
 

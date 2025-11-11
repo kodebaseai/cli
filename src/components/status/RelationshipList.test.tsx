@@ -2,12 +2,12 @@
  * Behavioral tests for RelationshipList component
  *
  * Invariants:
- * - Empty relationships show "No relationships" message
+ * - Empty relationships render nothing
  * - Blocked_by relationships are labeled as "Blocked by" when status is blocked
  * - Blocked_by relationships are labeled as "Dependencies" when status is not blocked
- * - Dependencies show ✓ checkmark when resolved (in_progress, in_review, completed)
- * - Dependencies are colored green when resolved, default color otherwise
- * - Blocks relationships are always shown in yellow
+ * - Dependencies show ✓ when resolved (green) or ✗ when not resolved (red)
+ * - Dependencies are displayed horizontally
+ * - Blocks relationships are shown as comma-separated inline list
  */
 
 import { render } from "ink-testing-library";
@@ -16,12 +16,12 @@ import { RelationshipList } from "./RelationshipList.js";
 
 describe("RelationshipList relationship display", () => {
   describe("empty state", () => {
-    it("displays 'No relationships' message when both arrays are empty", () => {
+    it("renders nothing when both arrays are empty", () => {
       const { lastFrame } = render(
         <RelationshipList blocks={[]} blockedBy={[]} />,
       );
 
-      expect(lastFrame()).toContain("No relationships");
+      expect(lastFrame()).toBe("");
     });
   });
 
@@ -31,9 +31,7 @@ describe("RelationshipList relationship display", () => {
         <RelationshipList blocks={["A.1.2", "A.1.3"]} blockedBy={[]} />,
       );
 
-      expect(lastFrame()).toContain("Blocks:");
-      expect(lastFrame()).toContain("A.1.2");
-      expect(lastFrame()).toContain("A.1.3");
+      expect(lastFrame()).toContain("Blocks: A.1.2, A.1.3");
     });
 
     it("does not display blocks section when blocks array is empty", () => {
@@ -46,7 +44,7 @@ describe("RelationshipList relationship display", () => {
   });
 
   describe("blockedBy relationships", () => {
-    it("displays 'Dependencies:' label when not blocked", () => {
+    it("displays 'Dependencies' label when not blocked", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -55,7 +53,8 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).toContain("Dependencies:");
+      expect(lastFrame()).toContain("Dependencies");
+      expect(lastFrame()).toContain("✗ A.1");
     });
 
     it("displays 'Blocked by:' label when status is blocked", () => {
@@ -86,7 +85,7 @@ describe("RelationshipList relationship display", () => {
   });
 
   describe("dependency resolution status", () => {
-    it('marks dependencies as "(resolved)" when status is in_progress', () => {
+    it("shows green ✓ when dependencies resolved (in_progress)", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -95,10 +94,11 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).toContain("(resolved)");
+      expect(lastFrame()).toContain("✓ A.1");
+      expect(lastFrame()).toContain("Dependencies");
     });
 
-    it('marks dependencies as "(resolved)" when status is in_review', () => {
+    it("shows green ✓ when dependencies resolved (in_review)", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -107,10 +107,11 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).toContain("(resolved)");
+      expect(lastFrame()).toContain("✓ A.1");
+      expect(lastFrame()).toContain("Dependencies");
     });
 
-    it('marks dependencies as "(resolved)" when status is completed', () => {
+    it("shows green ✓ when dependencies resolved (completed)", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -119,10 +120,11 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).toContain("(resolved)");
+      expect(lastFrame()).toContain("✓ A.1");
+      expect(lastFrame()).toContain("Dependencies");
     });
 
-    it("does not mark dependencies as resolved when status is draft", () => {
+    it("shows red ✗ when dependencies not resolved (draft)", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -131,10 +133,11 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).not.toContain("(resolved)");
+      expect(lastFrame()).toContain("✗ A.1");
+      expect(lastFrame()).toContain("Dependencies");
     });
 
-    it("does not mark dependencies as resolved when status is blocked", () => {
+    it("shows red ✗ when blocked", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -143,7 +146,8 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).not.toContain("(resolved)");
+      expect(lastFrame()).toContain("✗ A.1");
+      expect(lastFrame()).toContain("Blocked by:");
     });
   });
 
@@ -152,15 +156,16 @@ describe("RelationshipList relationship display", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
-          blockedBy={["A.1"]}
+          blockedBy={["A.1", "A.2"]}
           currentStatus="in_progress"
         />,
       );
 
-      expect(lastFrame()).toContain("✓");
+      expect(lastFrame()).toContain("✓ A.1");
+      expect(lastFrame()).toContain("✓ A.2");
     });
 
-    it("does not display checkmark when dependencies are not resolved", () => {
+    it("displays ✗ when dependencies are not resolved", () => {
       const { lastFrame } = render(
         <RelationshipList
           blocks={[]}
@@ -169,7 +174,7 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).not.toContain("✓");
+      expect(lastFrame()).toContain("✗ A.1");
     });
   });
 
@@ -183,12 +188,9 @@ describe("RelationshipList relationship display", () => {
         />,
       );
 
-      expect(lastFrame()).toContain("Relationships:");
-      expect(lastFrame()).toContain("Dependencies:");
-      expect(lastFrame()).toContain("Blocks:");
-      expect(lastFrame()).toContain("A.1");
-      expect(lastFrame()).toContain("A.1.2");
-      expect(lastFrame()).toContain("A.1.3");
+      expect(lastFrame()).toContain("Dependencies");
+      expect(lastFrame()).toContain("Blocks: A.1.2, A.1.3");
+      expect(lastFrame()).toContain("✓ A.1");
     });
   });
 
@@ -198,8 +200,8 @@ describe("RelationshipList relationship display", () => {
         <RelationshipList blocks={[]} blockedBy={["A.1"]} />,
       );
 
-      expect(lastFrame()).toContain("Dependencies:");
-      expect(lastFrame()).not.toContain("(resolved)");
+      expect(lastFrame()).toContain("Dependencies");
+      expect(lastFrame()).toContain("✗ A.1");
     });
 
     it("handles all standard artifact statuses", () => {
@@ -224,7 +226,11 @@ describe("RelationshipList relationship display", () => {
         );
 
         expect(lastFrame()).toBeDefined();
-        expect(lastFrame()).toContain("Relationships:");
+        // Each status should display either "Dependencies" or "Blocked by:"
+        const hasValidLabel =
+          lastFrame().includes("Dependencies") ||
+          lastFrame().includes("Blocked by:");
+        expect(hasValidLabel).toBe(true);
       }
     });
   });

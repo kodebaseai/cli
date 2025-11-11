@@ -4,8 +4,10 @@
  * Handles command routing and global error boundaries
  */
 
+import type { TArtifactEvent } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
+import { Status } from "./commands/Status.js";
 import { ErrorHandler, Help, Version } from "./components/index.js";
 
 export interface AppProps {
@@ -16,7 +18,7 @@ export interface AppProps {
 }
 
 export const App: FC<AppProps> = ({ args, verbose = false }) => {
-  const [command] = args;
+  const [command, ...commandArgs] = args;
 
   // Handle version command
   if (command === "version" || command === "--version" || command === "-v") {
@@ -31,6 +33,62 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
     !command
   ) {
     return <Help />;
+  }
+
+  // Handle status command
+  if (command === "status") {
+    // Parse artifact ID (first non-flag argument)
+    const artifactId = commandArgs.find((arg) => !arg.startsWith("--"));
+
+    // Parse flags
+    const all = commandArgs.includes("--all");
+    const json = commandArgs.includes("--json");
+
+    // Parse state filter (--state=value or --status=value)
+    const stateArg = commandArgs.find(
+      (arg) => arg.startsWith("--state=") || arg.startsWith("--status="),
+    );
+    const state = stateArg?.split("=")[1] as TArtifactEvent | undefined;
+
+    // Parse assignee filter (--assignee=value)
+    const assigneeArg = commandArgs.find((arg) =>
+      arg.startsWith("--assignee="),
+    );
+    const assignee = assigneeArg?.split("=")[1];
+
+    // Validate: either artifactId or --all must be provided
+    if (!artifactId && !all) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={
+              new Error("Either artifact ID or --all flag must be provided")
+            }
+            verbose={verbose}
+          />
+          <Box marginTop={1}>
+            <Text color="gray" dimColor>
+              Usage: kb status &lt;artifact-id&gt; [--json]
+            </Text>
+            <Text color="gray" dimColor>
+              Or: kb status --all [--status=&lt;state&gt;]
+              [--assignee=&lt;name&gt;] [--json]
+            </Text>
+          </Box>
+        </Box>
+      );
+    }
+
+    return (
+      <Status
+        artifactId={artifactId}
+        all={all}
+        format={json ? "json" : "formatted"}
+        state={state}
+        assignee={assignee}
+        verbose={verbose}
+      />
+    );
   }
 
   // Unknown command - show error and help
