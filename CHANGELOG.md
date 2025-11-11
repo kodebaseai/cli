@@ -1,5 +1,93 @@
 # @kodebase/cli
 
+## 0.2.0
+
+### Minor Changes
+
+- [#230](https://github.com/kodebaseai/kodebase/pull/230) [`c06d7ba`](https://github.com/kodebaseai/kodebase/commit/c06d7baa3692a1612b6cf6003bfe3267c27e73a8) Thanks [@migcarva](https://github.com/migcarva)! - **E.2: Start & Status Commands**
+
+  Implement `kb start` and `kb status` commands for working with artifacts, providing comprehensive workflow automation and status visualization.
+
+  ## Features
+
+  ### Start Command (`kb start <artifact-id>`)
+
+  - Readiness validation using ReadinessService before allowing work to begin
+  - Automatic feature branch creation with artifact ID as branch name
+  - AI-ready context generation from artifact metadata including parent hierarchy
+  - Clipboard integration for seamless context sharing with AI assistants
+  - `--submit` flag for automated PR creation and status transitions
+  - Comprehensive error handling for blocked/in-progress/non-existent artifacts
+  - Already-in-progress detection with branch-aware workflow
+
+  ### Status Command (`kb status`)
+
+  - **Detailed mode**: `kb status <artifact-id>` - Full artifact view with event timeline and relationships
+  - **List mode**: `kb status --all` - Table view of all artifacts with status indicators
+  - **JSON mode**: `kb status --json` - Machine-readable output for integrations
+  - Advanced filtering: `--state=<status>` and `--assignee=<name>` for targeted queries
+  - Visual components: EventTimeline, RelationshipList with Unicode icons
+  - Terminal utilities: Dynamic width detection, separator generation
+
+  ### Display Components
+
+  - **EventTimeline**: Chronological event history with icons, timestamps, actors, and triggers
+  - **RelationshipList**: Dependency visualization with resolution status indicators
+  - **StatusBadge**: Enhanced with git-ops lifecycle events (branch_created, pr_ready, pr_merged)
+
+  ### Context Generation
+
+  - Hierarchical context including parent artifact summaries
+  - Acceptance criteria and success metrics
+  - Relationship mapping (blocked_by, blocks)
+  - Metadata (priority, estimation, assignee)
+  - Formatted markdown ready for AI consumption
+
+  ### Utilities
+
+  - **context-generator.ts**: Generates AI-ready context from artifacts
+  - **Terminal utilities**: Width/height detection, separator creation
+  - Test setup improvements: Fake timers, deterministic RNG
+
+  ## Testing
+
+  - 162 total tests (100% pass rate)
+  - 82.41% code coverage
+  - Subprocess-based integration tests using execa
+  - Behavioral tests with documented domain invariants
+  - Fake timers for deterministic time-dependent logic
+  - Biome lint rules for test hygiene (noFocusedTests, noSkippedTests)
+
+  ## Technical Details
+
+  ### Dependencies
+
+  - Added `clipboardy` for cross-platform clipboard operations
+  - Integrated with ReadinessService for artifact validation
+  - Uses simple-git for branch operations
+  - git-ops adapters for PR automation
+
+  ### Implementation Highlights
+
+  - Event sourcing pattern with `appendEvent()` for status updates
+  - Branch naming: artifact ID directly (e.g., `E.2.3`)
+  - Draft PRs created by default with `--submit` flag
+  - Time injection for testable date-dependent components
+  - Stable event sorting with primary (timestamp) + secondary (event type) keys
+
+  ### Quality Improvements
+
+  - Component-level time injection vs global mocks
+  - Fixed-width Box components for consistent column alignment
+  - Dynamic relationship labels based on artifact state
+  - Terminal width clamping (40-200 chars) for layout stability
+
+  ## Child Artifacts Completed
+
+  - **E.2.1**: Status Display Components (EventTimeline, RelationshipList)
+  - **E.2.2**: Status Command (detailed/list/JSON modes, filtering)
+  - **E.2.3**: Start Command (readiness validation, context generation, PR automation)
+
 ## 0.1.0
 
 ### Minor Changes
