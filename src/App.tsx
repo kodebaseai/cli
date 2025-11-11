@@ -9,6 +9,7 @@ import { Box, Text } from "ink";
 import type { FC } from "react";
 import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
+import { Validate } from "./commands/Validate.js";
 import { ErrorHandler, Help, Version } from "./components/index.js";
 
 export interface AppProps {
@@ -115,6 +116,27 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
         format={json ? "json" : "formatted"}
         state={state}
         assignee={assignee}
+        verbose={verbose}
+      />
+    );
+  }
+
+  // Handle validate command
+  if (command === "validate") {
+    // Parse artifact ID (first non-flag argument)
+    const artifactId = commandArgs.find((arg) => !arg.startsWith("--"));
+
+    // Parse flags
+    const fix = commandArgs.includes("--fix");
+    const strict = commandArgs.includes("--strict");
+    const json = commandArgs.includes("--json");
+
+    return (
+      <Validate
+        artifactId={artifactId}
+        fix={fix}
+        strict={strict}
+        format={json ? "json" : "formatted"}
         verbose={verbose}
       />
     );

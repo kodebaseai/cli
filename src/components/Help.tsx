@@ -38,6 +38,12 @@ export const Help: FC = () => {
         </Text>
         <Text>
           <Text color="green" bold>
+            validate [artifact-id]{" "}
+          </Text>
+          <Text color="gray">Validate artifacts for correctness</Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
             version, --version, -v{" "}
           </Text>
           <Text color="gray">Display version information</Text>
