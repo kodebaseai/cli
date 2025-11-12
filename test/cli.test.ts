@@ -60,6 +60,13 @@ describe("CLI command routing", () => {
     }
   });
 
+  it("routes tutorial command", async () => {
+    // Tutorial is interactive, so we just verify it starts
+    // We can't test full interaction in subprocess test
+    const { stdout } = await runCLI(["tutorial"]);
+    expect(stdout).toContain("Welcome to Kodebase Tutorial!");
+  });
+
   it("shows error and help suggestion for unknown commands", async () => {
     const { output } = await runCLI(["unknown"]);
     expect(output).toContain("Error: Unknown command: unknown");

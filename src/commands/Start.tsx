@@ -42,6 +42,14 @@ import { type SimpleGit, simpleGit } from "simple-git";
 import { ErrorHandler, StatusBadge } from "../components/index.js";
 import { generateArtifactContext } from "../utils/index.js";
 
+/**
+ * Format timestamp for artifact events (ISO 8601 without milliseconds)
+ * Example: 2025-11-12T10:31:25Z
+ */
+function formatTimestamp(): string {
+  return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 export interface StartCommandProps {
   /** Artifact ID to start work on (e.g., 'E.2.3') */
   artifactId: string;
@@ -177,7 +185,7 @@ export const Start: FC<StartCommandProps> = ({
         // Step 7: Update artifact status to in_progress
         const event: TEvent = {
           event: CArtifactEvent.IN_PROGRESS,
-          timestamp: new Date().toISOString(),
+          timestamp: formatTimestamp(),
           actor: artifact.metadata.assignee || "Unknown",
           trigger: "branch_created",
         };
@@ -186,7 +194,12 @@ export const Start: FC<StartCommandProps> = ({
           event,
         });
 
-        // Step 8: Push branch and create draft PR immediately
+        // Step 8: Commit the in_progress event change
+        setProgressMessage("Committing artifact status...");
+        await git.add(".kodebase/**/*");
+        await git.commit(`chore(artifacts): Start ${artifactId}`);
+
+        // Step 9: Push branch and create draft PR immediately
         setProgressMessage("Pushing branch to remote...");
         const config = await loadConfig(process.cwd());
         const adapter = createAdapter(config);
@@ -213,11 +226,11 @@ export const Start: FC<StartCommandProps> = ({
           prUrl = pr.url ?? undefined;
         }
 
-        // Step 9: Generate context
+        // Step 10: Generate context
         setProgressMessage("Generating context...");
         const context = await generateArtifactContext(artifactId);
 
-        // Step 10: Copy context to clipboard
+        // Step 11: Copy context to clipboard
         try {
           const clipboardy = await import("clipboardy");
           await clipboardy.default.write(context);
@@ -225,7 +238,7 @@ export const Start: FC<StartCommandProps> = ({
           // Clipboard may not be available in headless/CI environments
         }
 
-        // Step 11: Handle --submit flag
+        // Step 12: Handle --submit flag
         if (submit) {
           setProgressMessage("Marking PR as ready...");
           const submitUrl = await handleSubmit(artifactId, branchName);
@@ -438,7 +451,7 @@ async function handleSubmit(
   const artifact = await artifactService.getArtifact({ id: artifactId });
   const inReviewEvent: TEvent = {
     event: "in_review" as TArtifactEvent,
-    timestamp: new Date().toISOString(),
+    timestamp: formatTimestamp(),
     actor: artifact.metadata.assignee || "Unknown",
     trigger: "pr_ready",
   };

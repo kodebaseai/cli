@@ -10,6 +10,7 @@ import type { FC } from "react";
 import { Context } from "./commands/Context.js";
 import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
+import { Tutorial } from "./commands/Tutorial.js";
 import { Validate } from "./commands/Validate.js";
 import { ErrorHandler, Help, Version } from "./components/index.js";
 
@@ -35,7 +36,9 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
     command === "-h" ||
     !command
   ) {
-    return <Help />;
+    // Check if user wants help for a specific command (e.g., kb help start)
+    const helpCommand = commandArgs.find((arg) => !arg.startsWith("--"));
+    return <Help command={helpCommand} />;
   }
 
   // Handle start command
@@ -206,6 +209,11 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
         verbose={verbose}
       />
     );
+  }
+
+  // Handle tutorial command
+  if (command === "tutorial") {
+    return <Tutorial verbose={verbose} />;
   }
 
   // Unknown command - show error and help

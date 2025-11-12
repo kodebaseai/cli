@@ -119,7 +119,7 @@ describe("Help display", () => {
     it("includes call-to-action for more information", () => {
       const { lastFrame } = render(<Help />);
 
-      expect(lastFrame()).toContain("For more information, visit:");
+      expect(lastFrame()).toContain("For more information:");
     });
 
     it("displays link at end of help text", () => {
@@ -172,6 +172,20 @@ describe("Help display", () => {
     });
   });
 
+  describe("tutorial command", () => {
+    it("lists tutorial command", () => {
+      const { lastFrame } = render(<Help />);
+
+      expect(lastFrame()).toContain("tutorial");
+    });
+
+    it("describes tutorial command purpose", () => {
+      const { lastFrame } = render(<Help />);
+
+      expect(lastFrame()).toContain("Interactive tutorial for new users");
+    });
+  });
+
   describe("completeness invariants", () => {
     it("documents all command aliases consistently", () => {
       const { lastFrame } = render(<Help />);
@@ -205,6 +219,191 @@ describe("Help display", () => {
       const verboseDescIndex = output.indexOf("Enable verbose output");
 
       expect(verboseDescIndex).toBeGreaterThan(verboseIndex);
+    });
+  });
+
+  describe("command-specific help", () => {
+    describe("start command help", () => {
+      it("displays start command title", () => {
+        const { lastFrame } = render(<Help command="start" />);
+
+        expect(lastFrame()).toContain("kb start");
+        expect(lastFrame()).toContain("Start work on an artifact");
+      });
+
+      it("shows usage syntax", () => {
+        const { lastFrame } = render(<Help command="start" />);
+
+        expect(lastFrame()).toContain("kb start <artifact-id>");
+      });
+
+      it("includes examples", () => {
+        const { lastFrame } = render(<Help command="start" />);
+
+        expect(lastFrame()).toContain("kb start A.1.1");
+      });
+
+      it("explains what happens when command runs", () => {
+        const { lastFrame } = render(<Help command="start" />);
+
+        expect(lastFrame()).toContain("Creates a new Git branch");
+        expect(lastFrame()).toContain("in_progress state");
+      });
+    });
+
+    describe("status command help", () => {
+      it("displays status command title", () => {
+        const { lastFrame } = render(<Help command="status" />);
+
+        expect(lastFrame()).toContain("kb status");
+        expect(lastFrame()).toContain("Display artifact status");
+      });
+
+      it("shows all usage forms", () => {
+        const { lastFrame } = render(<Help command="status" />);
+        const output = lastFrame();
+
+        expect(output).toContain("kb status <artifact-id>");
+        expect(output).toContain("kb status --all");
+      });
+
+      it("lists all options", () => {
+        const { lastFrame } = render(<Help command="status" />);
+        const output = lastFrame();
+
+        expect(output).toContain("--all");
+        expect(output).toContain("--json");
+        expect(output).toContain("--state");
+        expect(output).toContain("--assignee");
+      });
+
+      it("includes examples", () => {
+        const { lastFrame } = render(<Help command="status" />);
+        const output = lastFrame();
+
+        expect(output).toContain("kb status A.1.1");
+        expect(output).toContain("kb status --all");
+      });
+    });
+
+    describe("validate command help", () => {
+      it("displays validate command title", () => {
+        const { lastFrame } = render(<Help command="validate" />);
+
+        expect(lastFrame()).toContain("kb validate");
+        expect(lastFrame()).toContain("Validate artifacts");
+      });
+
+      it("lists options", () => {
+        const { lastFrame } = render(<Help command="validate" />);
+        const output = lastFrame();
+
+        expect(output).toContain("--json");
+        expect(output).toContain("--fix");
+        expect(output).toContain("--strict");
+      });
+
+      it("describes validation checks", () => {
+        const { lastFrame } = render(<Help command="validate" />);
+        const output = lastFrame();
+
+        expect(output).toContain("Required fields");
+        expect(output).toContain("Valid artifact ID format");
+        expect(output).toContain("relationship integrity");
+      });
+    });
+
+    describe("ctx command help", () => {
+      it("displays ctx command title", () => {
+        const { lastFrame } = render(<Help command="ctx" />);
+
+        expect(lastFrame()).toContain("kb ctx");
+        expect(lastFrame()).toContain("Generate AI context");
+      });
+
+      it("supports context alias", () => {
+        const { lastFrame } = render(<Help command="context" />);
+
+        expect(lastFrame()).toContain("kb ctx");
+      });
+
+      it("lists format options", () => {
+        const { lastFrame } = render(<Help command="ctx" />);
+        const output = lastFrame();
+
+        expect(output).toContain("--format");
+        expect(output).toContain("standard");
+        expect(output).toContain("compact");
+        expect(output).toContain("detailed");
+      });
+
+      it("lists output options", () => {
+        const { lastFrame } = render(<Help command="ctx" />);
+        const output = lastFrame();
+
+        expect(output).toContain("--copy");
+        expect(output).toContain("--output");
+      });
+
+      it("includes examples", () => {
+        const { lastFrame } = render(<Help command="ctx" />);
+        const output = lastFrame();
+
+        expect(output).toContain("kb ctx A.1.1");
+        expect(output).toContain("kb ctx A.1.1 --copy");
+      });
+    });
+
+    describe("tutorial command help", () => {
+      it("displays tutorial command title", () => {
+        const { lastFrame } = render(<Help command="tutorial" />);
+
+        expect(lastFrame()).toContain("kb tutorial");
+        expect(lastFrame()).toContain("Interactive tutorial");
+      });
+
+      it("describes what users will learn", () => {
+        const { lastFrame } = render(<Help command="tutorial" />);
+        const output = lastFrame();
+
+        expect(output).toContain("Kodebase concepts");
+        expect(output).toContain("Creating artifacts");
+        expect(output).toContain("Git workflow");
+      });
+
+      it("describes tutorial features", () => {
+        const { lastFrame } = render(<Help command="tutorial" />);
+        const output = lastFrame();
+
+        expect(output).toContain("7-step");
+        expect(output).toContain("demo artifacts");
+        expect(output).toContain("Progress tracking");
+      });
+    });
+
+    describe("unknown command", () => {
+      it("displays error for unknown command", () => {
+        const { lastFrame } = render(<Help command="unknown" />);
+
+        expect(lastFrame()).toContain("Unknown command: unknown");
+      });
+
+      it("lists available commands", () => {
+        const { lastFrame } = render(<Help command="unknown" />);
+        const output = lastFrame();
+
+        expect(output).toContain("start");
+        expect(output).toContain("status");
+        expect(output).toContain("validate");
+        expect(output).toContain("ctx");
+        expect(output).toContain("tutorial");
+      });
+
+      it("suggests running help command", () => {
+        const { lastFrame } = render(<Help command="unknown" />);
+
+        expect(lastFrame()).toContain("kb help");
+      });
     });
   });
 });

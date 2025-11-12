@@ -98,37 +98,46 @@ export const Validate: FC<ValidateCommandProps> = ({
         const validationService = new ValidationService();
 
         // Step 1: Load artifacts
-        const artifactsToValidate = new Map<string, TAnyArtifact>();
+        // IMPORTANT: Always load all artifacts for relationship validation,
+        // even when validating a single artifact
+        const { QueryService } = await import("@kodebase/artifacts");
+        const queryService = new QueryService();
+        const allArtifacts = await queryService.findArtifacts({});
 
-        if (artifactId) {
-          // Load specific artifact
-          const artifact = await artifactService.getArtifact({
-            id: artifactId,
-          });
-          artifactsToValidate.set(artifactId, artifact);
-        } else {
-          // Load all artifacts using QueryService
-          const { QueryService } = await import("@kodebase/artifacts");
-          const queryService = new QueryService();
-          const allArtifacts = await queryService.findArtifacts({});
-
-          for (const item of allArtifacts) {
-            artifactsToValidate.set(item.id, item.artifact);
-          }
+        const allArtifactsMap = new Map<string, TAnyArtifact>();
+        for (const item of allArtifacts) {
+          allArtifactsMap.set(item.id, item.artifact);
         }
 
         // Step 2: Run validation
-        let validationResults = validationService.validateAll({
-          artifacts: artifactsToValidate,
-        });
+        let validationResults: ValidationResultWithId[];
+
+        if (artifactId) {
+          // Validate specific artifact with full context for relationship checking
+          const artifact = allArtifactsMap.get(artifactId);
+          if (!artifact) {
+            throw new Error(`Artifact "${artifactId}" not found`);
+          }
+
+          // Use validateArtifact with allArtifacts context
+          validationResults = [
+            validationService.validateArtifact(artifact, {
+              artifactId,
+              allArtifacts: allArtifactsMap,
+            }),
+          ];
+        } else {
+          // Validate all artifacts
+          validationResults = validationService.validateAll({
+            artifacts: allArtifactsMap,
+          });
+        }
 
         // Step 3: Apply fixes if --fix flag provided
         let fixedCount = 0;
         if (fix) {
           for (const validationResult of validationResults) {
-            const artifact = artifactsToValidate.get(
-              validationResult.artifactId,
-            );
+            const artifact = allArtifactsMap.get(validationResult.artifactId);
             if (!artifact) continue;
 
             // Apply safe auto-fixes
@@ -143,18 +152,29 @@ export const Validate: FC<ValidateCommandProps> = ({
               const updatedArtifact = await artifactService.getArtifact({
                 id: validationResult.artifactId,
               });
-              artifactsToValidate.set(
-                validationResult.artifactId,
-                updatedArtifact,
-              );
+              allArtifactsMap.set(validationResult.artifactId, updatedArtifact);
             }
           }
 
           // Re-run validation after fixes
           if (fixedCount > 0) {
-            validationResults = validationService.validateAll({
-              artifacts: artifactsToValidate,
-            });
+            if (artifactId) {
+              // Re-validate specific artifact
+              const artifact = allArtifactsMap.get(artifactId);
+              if (artifact) {
+                validationResults = [
+                  validationService.validateArtifact(artifact, {
+                    artifactId,
+                    allArtifacts: allArtifactsMap,
+                  }),
+                ];
+              }
+            } else {
+              // Re-validate all artifacts
+              validationResults = validationService.validateAll({
+                artifacts: allArtifactsMap,
+              });
+            }
           }
         }
 
@@ -250,77 +270,82 @@ export const Validate: FC<ValidateCommandProps> = ({
   // Formatted output
   const { results = [], summary } = result;
 
+  // When validating a specific artifact, show it even if valid
+  // When validating all artifacts, only show invalid ones
+  const resultsToShow =
+    artifactId || results.length === 1
+      ? results
+      : results.filter((result) => !result.valid);
+
   return (
     <Box flexDirection="column">
       {/* Validation Results */}
-      {results
-        .filter((result) => !result.valid)
-        .map((validationResult) => (
-          <Box key={validationResult.artifactId} flexDirection="column">
-            <Box>
-              <Text color={validationResult.valid ? "green" : "red"}>
-                {validationResult.valid ? "✓" : "✗"}
-              </Text>
-              <Text> </Text>
-              <Text bold>{validationResult.artifactId}</Text>
-              {!validationResult.valid && (
-                <>
-                  <Text> - </Text>
-                  <Text color="red">
-                    {validationResult.errors.length > 0 &&
-                      `${validationResult.errors.length} ${validationResult.errors.length === 1 ? "error" : "errors"}`}
-                    {validationResult.errors.length > 0 &&
-                      validationResult.warnings.length > 0 &&
-                      ", "}
-                    {validationResult.warnings.length > 0 &&
-                      `${validationResult.warnings.length} ${validationResult.warnings.length === 1 ? "warning" : "warnings"}`}
-                  </Text>
-                </>
+      {resultsToShow.map((validationResult) => (
+        <Box key={validationResult.artifactId} flexDirection="column">
+          <Box>
+            <Text color={validationResult.valid ? "green" : "red"}>
+              {validationResult.valid ? "✓" : "✗"}
+            </Text>
+            <Text> </Text>
+            <Text bold>{validationResult.artifactId}</Text>
+            {!validationResult.valid && (
+              <>
+                <Text> - </Text>
+                <Text color="red">
+                  {validationResult.errors.length > 0 &&
+                    `${validationResult.errors.length} ${validationResult.errors.length === 1 ? "error" : "errors"}`}
+                  {validationResult.errors.length > 0 &&
+                    validationResult.warnings.length > 0 &&
+                    ", "}
+                  {validationResult.warnings.length > 0 &&
+                    `${validationResult.warnings.length} ${validationResult.warnings.length === 1 ? "warning" : "warnings"}`}
+                </Text>
+              </>
+            )}
+          </Box>
+
+          {/* Errors */}
+          {validationResult.errors.map((error, idx) => (
+            <Box
+              key={`${validationResult.artifactId}-error-${idx}`}
+              marginLeft={2}
+              flexDirection="column"
+            >
+              <Box>
+                <Text color="red"> • {error.message}</Text>
+              </Box>
+              {error.field && (
+                <Box marginLeft={2}>
+                  <Text dimColor>Field: {error.field}</Text>
+                </Box>
+              )}
+              {error.suggestedFix && (
+                <Box marginLeft={2}>
+                  <Text color="yellow">Fix: {error.suggestedFix}</Text>
+                </Box>
               )}
             </Box>
+          ))}
 
-            {/* Errors */}
-            {validationResult.errors.map((error, idx) => (
-              <Box
-                key={`${validationResult.artifactId}-error-${idx}`}
-                marginLeft={2}
-                flexDirection="column"
-              >
-                <Box>
-                  <Text color="red"> • {error.message}</Text>
-                </Box>
-                {error.field && (
-                  <Box marginLeft={2}>
-                    <Text dimColor>Field: {error.field}</Text>
-                  </Box>
-                )}
-                {error.suggestedFix && (
-                  <Box marginLeft={2}>
-                    <Text color="yellow">Fix: {error.suggestedFix}</Text>
-                  </Box>
-                )}
+          {/* Warnings */}
+          {validationResult.warnings.map((warning, idx) => (
+            <Box
+              key={`${validationResult.artifactId}-warning-${idx}`}
+              marginLeft={2}
+              flexDirection="column"
+            >
+              <Box>
+                <Text color="yellow"> ⚠ {warning.message}</Text>
               </Box>
-            ))}
-
-            {/* Warnings */}
-            {validationResult.warnings.map((warning, idx) => (
-              <Box
-                key={`${validationResult.artifactId}-warning-${idx}`}
-                marginLeft={2}
-                flexDirection="column"
-              >
-                <Box>
-                  <Text color="yellow"> ⚠ {warning.message}</Text>
+              {warning.field && (
+                <Box marginLeft={2}>
+                  <Text dimColor>Field: {warning.field}</Text>
                 </Box>
-                {warning.field && (
-                  <Box marginLeft={2}>
-                    <Text dimColor>Field: {warning.field}</Text>
-                  </Box>
-                )}
-              </Box>
-            ))}
-          </Box>
-        ))}
+              )}
+            </Box>
+          ))}
+        </Box>
+      ))}
 
       {/* Summary */}
       {summary && (
