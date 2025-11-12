@@ -1,5 +1,61 @@
 # @kodebase/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- [#240](https://github.com/kodebaseai/kodebase/pull/240) [`db77ee9`](https://github.com/kodebaseai/kodebase/commit/db77ee9445b740a6b552da9a7c6cefe118d916cf) Thanks [@migcarva](https://github.com/migcarva)! - feat(cli): add validate, context, tutorial, and command-specific help
+
+  Completes E.3 milestone with comprehensive validation, AI context generation, interactive tutorial, and command-specific help system:
+
+  **Validate Command (E.3.1)**
+
+  - Artifact validation with ValidationService integration
+  - Multiple output formats: human-readable and JSON
+  - Auto-fix capability for common issues (--fix flag)
+  - Strict mode for CI/CD (--strict flag exits 1 on warnings)
+  - Clear error formatting with validation suggestions
+  - Support for single artifact or all artifacts validation
+
+  **Context Command (E.3.2)**
+
+  - AI-optimized context generation from artifacts
+  - Three format options: standard (default), compact, detailed
+  - Hierarchical parent context for proper scope establishment
+  - Clipboard integration via --copy flag
+  - File output via --output flag
+  - Metadata, relationships, and acceptance criteria included
+
+  **Tutorial Command (E.3.3)**
+
+  - 7-step interactive tutorial walkthrough
+  - Creates demo artifacts in .kodebase/artifacts/X.\*
+  - Progress tracking with resume capability
+  - State persistence in ~/.kodebase/tutorial/progress.json
+  - Automatic cleanup on completion or early exit
+  - Visual progress bar and step indicators
+  - Covers: concepts, artifact creation, Git workflow, CLI commands
+
+  **Command-Specific Help (E.3.3)**
+
+  - kb help <command> for detailed command documentation
+  - Comprehensive help for: start, status, validate, ctx, tutorial
+  - Usage syntax, options, examples for each command
+  - "What happens" explanations for workflow commands
+  - Unknown command error with helpful suggestions
+  - Context/ctx alias support maintained
+
+  **Testing & Quality**
+
+  - 243 tests passing (up from 221)
+  - 85.47% coverage (up from 84.91%)
+  - Help.tsx: 100% test coverage
+  - Comprehensive command-specific help tests (22 new tests)
+  - Tutorial state persistence tests (19 tests)
+  - Integration with existing ArtifactService and ScaffoldingService APIs
+
+  Resolves E.3 milestone - Validate, Context & Tutorial Commands
+
 ## 0.2.0
 
 ### Minor Changes
