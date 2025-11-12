@@ -44,6 +44,12 @@ export const Help: FC = () => {
         </Text>
         <Text>
           <Text color="green" bold>
+            ctx &lt;artifact-id&gt;{" "}
+          </Text>
+          <Text color="gray">Generate AI context from artifact</Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
             version, --version, -v{" "}
           </Text>
           <Text color="gray">Display version information</Text>

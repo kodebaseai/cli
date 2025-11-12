@@ -7,6 +7,7 @@
 import type { TArtifactEvent } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
+import { Context } from "./commands/Context.js";
 import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
 import { Validate } from "./commands/Validate.js";
@@ -137,6 +138,71 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
         fix={fix}
         strict={strict}
         format={json ? "json" : "formatted"}
+        verbose={verbose}
+      />
+    );
+  }
+
+  // Handle context command (ctx alias)
+  if (command === "context" || command === "ctx") {
+    // Parse artifact ID (first non-flag argument)
+    const artifactId = commandArgs.find((arg) => !arg.startsWith("--"));
+
+    // Parse flags
+    const copy = commandArgs.includes("--copy");
+
+    // Parse format flag (--format=value)
+    const formatArg = commandArgs.find((arg) => arg.startsWith("--format="));
+    const format = formatArg?.split("=")[1] as
+      | "standard"
+      | "compact"
+      | "detailed"
+      | undefined;
+
+    // Parse output flag (--output=value)
+    const outputArg = commandArgs.find((arg) => arg.startsWith("--output="));
+    const output = outputArg?.split("=")[1];
+
+    // Validate: artifact ID is required
+    if (!artifactId) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={new Error("Artifact ID is required")}
+            verbose={verbose}
+          />
+          <Box marginTop={1}>
+            <Text color="gray" dimColor>
+              Usage: kb ctx &lt;artifact-id&gt;
+              [--format=standard|compact|detailed] [--copy] [--output=file.md]
+            </Text>
+          </Box>
+        </Box>
+      );
+    }
+
+    // Validate format value if provided
+    if (format && !["standard", "compact", "detailed"].includes(format)) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={
+              new Error(
+                `Invalid format: ${format}. Must be one of: standard, compact, detailed`,
+              )
+            }
+            verbose={verbose}
+          />
+        </Box>
+      );
+    }
+
+    return (
+      <Context
+        artifactId={artifactId}
+        format={format}
+        copy={copy}
+        output={output}
         verbose={verbose}
       />
     );

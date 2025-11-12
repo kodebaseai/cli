@@ -35,7 +35,6 @@ import {
   type TEvent,
 } from "@kodebase/core";
 import { createAdapter } from "@kodebase/git-ops";
-import clipboardy from "clipboardy";
 import { Box, Text } from "ink";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
@@ -78,6 +77,7 @@ export const Start: FC<StartCommandProps> = ({
 }) => {
   const [result, setResult] = useState<StartResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const handleStartCommand = async () => {
@@ -132,7 +132,26 @@ export const Start: FC<StartCommandProps> = ({
             // Already on the correct branch and in progress
             // Generate context and continue
             const context = await generateArtifactContext(artifactId);
-            await clipboardy.write(context);
+            try {
+              const clipboardy = await import("clipboardy");
+              await clipboardy.default.write(context);
+            } catch {
+              // Clipboard may not be available in headless/CI environments
+            }
+
+            // Handle --submit flag even when already working
+            if (submit) {
+              const prUrl = await handleSubmit(artifactId, targetBranchName);
+              setResult({
+                success: true,
+                message: `Already working on ${artifactId} - marked PR ready`,
+                branchName: targetBranchName,
+                context,
+                prUrl,
+              });
+              setIsLoading(false);
+              return;
+            }
 
             setResult({
               success: true,
@@ -167,21 +186,55 @@ export const Start: FC<StartCommandProps> = ({
           event,
         });
 
-        // Step 8: Generate context
+        // Step 8: Push branch and create draft PR immediately
+        setProgressMessage("Pushing branch to remote...");
+        const config = await loadConfig(process.cwd());
+        const adapter = createAdapter(config);
+
+        // Check if PR already exists (user-created)
+        const existingPR = await adapter.findPRForBranch(branchName);
+        let prUrl: string | undefined;
+
+        if (existingPR) {
+          // User already created a PR
+          prUrl = existingPR.url ?? undefined;
+        } else {
+          // Auto-create draft PR
+          await git.push("origin", branchName, ["--set-upstream"]);
+          setProgressMessage("Creating draft PR...");
+          const pr = await adapter.createDraftPR({
+            branch: branchName,
+            title: `${artifactId}: ${artifact.metadata.title}`,
+            body: `🚧 Work in progress on ${artifactId}`,
+            draft: true,
+            repoPath: process.cwd(),
+            baseBranch: "main",
+          });
+          prUrl = pr.url ?? undefined;
+        }
+
+        // Step 9: Generate context
+        setProgressMessage("Generating context...");
         const context = await generateArtifactContext(artifactId);
 
-        // Step 9: Copy context to clipboard
-        await clipboardy.write(context);
+        // Step 10: Copy context to clipboard
+        try {
+          const clipboardy = await import("clipboardy");
+          await clipboardy.default.write(context);
+        } catch {
+          // Clipboard may not be available in headless/CI environments
+        }
 
-        // Step 10: Handle --submit flag
+        // Step 11: Handle --submit flag
         if (submit) {
-          const prUrl = await handleSubmit(git, artifactId, branchName);
+          setProgressMessage("Marking PR as ready...");
+          const submitUrl = await handleSubmit(artifactId, branchName);
           setResult({
             success: true,
-            message: `Started work on ${artifactId} and created PR`,
+            message: `Started work on ${artifactId} and marked PR ready`,
             branchName,
             context,
-            prUrl,
+            prUrl: submitUrl,
           });
         } else {
           setResult({
@@ -189,6 +242,7 @@ export const Start: FC<StartCommandProps> = ({
             message: `Started work on ${artifactId}`,
             branchName,
             context,
+            prUrl,
           });
         }
       } catch (error) {
@@ -209,7 +263,9 @@ export const Start: FC<StartCommandProps> = ({
   if (isLoading) {
     return (
       <Box flexDirection="column">
-        <Text dimColor>Starting work on {artifactId}...</Text>
+        <Text dimColor>
+          {progressMessage || `Starting work on ${artifactId}...`}
+        </Text>
       </Box>
     );
   }
@@ -314,22 +370,20 @@ export const Start: FC<StartCommandProps> = ({
         </>
       )}
 
-      {result.prUrl ? (
+      {result.prUrl && (
         <>
-          <Text color="green">✓ PR created: {result.prUrl}</Text>
+          <Text color="green">✓ Draft PR: {result.prUrl}</Text>
           <Text />
-          <Text dimColor>Next: Review and merge the PR</Text>
-        </>
-      ) : (
-        <>
-          <Text bold>Next Steps:</Text>
-          <Text dimColor>1. Paste context into AI assistant</Text>
-          <Text dimColor>2. Make changes and commit your work</Text>
-          <Text dimColor>
-            3. Run: <Text color="cyan">kb start {artifactId} --submit</Text>
-          </Text>
         </>
       )}
+
+      <Text bold>Next Steps:</Text>
+      <Text dimColor>1. Paste context into AI assistant</Text>
+      <Text dimColor>2. Make changes and commit your work</Text>
+      <Text dimColor>
+        3. Mark PR ready:{" "}
+        <Text color="cyan">kb start {artifactId} --submit</Text>
+      </Text>
     </Box>
   );
 };
@@ -351,50 +405,37 @@ async function createBranch(git: SimpleGit, branchName: string): Promise<void> {
 }
 
 /**
- * Handle --submit flag: push branch and create PR
+ * Handle --submit flag: mark existing draft PR as ready for review
  */
 async function handleSubmit(
-  git: SimpleGit,
   artifactId: string,
   branchName: string,
 ): Promise<string> {
-  // Check if there are changes to commit
-  const status = await git.status();
-
-  if (status.files.length > 0) {
-    throw new Error(
-      "You have uncommitted changes. Please commit your changes before submitting.",
-    );
-  }
-
-  // Check if branch has commits
-  try {
-    await git.revparse(["--verify", branchName]);
-  } catch {
-    throw new Error(
-      "No commits found on this branch. Please make changes and commit before submitting.",
-    );
-  }
-
-  // Push branch
-  await git.push("origin", branchName, ["--set-upstream"]);
-
-  // Create PR using git-ops adapter
+  // Load adapter and artifact service
   const config = await loadConfig(process.cwd());
   const adapter = createAdapter(config);
   const artifactService = new ArtifactService();
-  const artifact = await artifactService.getArtifact({ id: artifactId });
 
-  const pr = await adapter.createDraftPR({
-    branch: branchName,
-    title: `${artifactId}: ${artifact.metadata.title}`,
-    body: `## Summary\n\nWork on ${artifactId}\n\n---\n*Created by Kodebase CLI*`,
-    draft: true,
-    repoPath: process.cwd(),
-    baseBranch: "main",
-  });
+  // Find existing PR for this branch
+  const existingPR = await adapter.findPRForBranch(branchName);
+
+  if (!existingPR) {
+    throw new Error(
+      `No PR found for branch '${branchName}'. This should not happen - PR should have been created on start.`,
+    );
+  }
+
+  if (!existingPR.isDraft) {
+    throw new Error(
+      `PR #${existingPR.number} is already marked as ready: ${existingPR.url}`,
+    );
+  }
+
+  // Mark PR as ready for review
+  await adapter.markPRReady(existingPR.number);
 
   // Update artifact status to in_review
+  const artifact = await artifactService.getArtifact({ id: artifactId });
   const inReviewEvent: TEvent = {
     event: "in_review" as TArtifactEvent,
     timestamp: new Date().toISOString(),
@@ -406,5 +447,5 @@ async function handleSubmit(
     event: inReviewEvent,
   });
 
-  return pr.url || "(PR created but URL not available)";
+  return existingPR.url || "(PR URL not available)";
 }

@@ -70,3 +70,16 @@ export interface TutorialCommandProps {
   /** Enable verbose output and error details */
   verbose?: boolean;
 }
+
+export interface ContextCommandProps {
+  /** Artifact ID to generate context for (e.g., 'A.1.1') */
+  artifactId: string;
+  /** Output format: standard (default), compact, detailed */
+  format?: "standard" | "compact" | "detailed";
+  /** Copy to clipboard */
+  copy?: boolean;
+  /** Output file path */
+  output?: string;
+  /** Enable verbose output and error details */
+  verbose?: boolean;
+}
