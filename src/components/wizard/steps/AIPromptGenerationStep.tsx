@@ -4,7 +4,7 @@
  * Third step of the AI-assisted wizard. Generates a context-aware prompt
  * and copies it to clipboard for the user to paste into their AI assistant.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 585-818)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 585-818)
  */
 
 import path from "node:path";

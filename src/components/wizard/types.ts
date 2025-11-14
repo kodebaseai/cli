@@ -2,7 +2,7 @@
  * Wizard Types and Interfaces
  *
  * Defines the type system for the AI-assisted artifact creation wizard.
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md
  */
 
 import type {

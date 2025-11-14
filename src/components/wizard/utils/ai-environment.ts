@@ -4,7 +4,7 @@
  * Detects whether the user is in an IDE environment (Cursor, VSCode)
  * or using web-based AI (ChatGPT, Claude web, etc.)
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 770-812)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 770-812)
  */
 
 import fs from "node:fs/promises";

@@ -4,7 +4,7 @@
  * Generates context-aware prompts for AI assistants to create artifacts.
  * Supports both IDE-based and web-based AI workflows.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 619-761)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 619-761)
  */
 
 import path from "node:path";

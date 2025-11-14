@@ -4,7 +4,7 @@
  * Main orchestrator for the AI-assisted artifact creation wizard.
  * Handles navigation, state management, and step rendering.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md
  */
 
 import type { TAnyArtifact, TArtifactType } from "@kodebase/core";

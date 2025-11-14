@@ -1,6 +1,6 @@
 {
   "name": "@kodebase/cli",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "Kodebase CLI - Structured knowledge management for software projects using Git as a database",
   "keywords": [
     "kodebase",

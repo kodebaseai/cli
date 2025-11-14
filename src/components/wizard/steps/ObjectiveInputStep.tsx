@@ -4,7 +4,7 @@
  * Second step of the AI-assisted wizard. Collects the user's objective/idea
  * in natural language. This replaces the traditional multi-field form.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 507-583)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 507-583)
  */
 
 import { Box, Newline, Text, useInput } from "ink";

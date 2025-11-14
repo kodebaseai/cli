@@ -4,7 +4,7 @@
  * Fifth and final step of the wizard. Shows a formatted summary of the
  * AI-generated artifact and confirms creation.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 1067-1476)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 1067-1476)
  */
 
 import { Box, Newline, Text, useInput } from "ink";

@@ -5,7 +5,7 @@
  * 1. Select artifact type (initiative, milestone, issue)
  * 2. Select parent artifact (for milestone/issue) with searchable list
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 383-505)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 383-505)
  */
 
 import { QueryService } from "@kodebase/artifacts";

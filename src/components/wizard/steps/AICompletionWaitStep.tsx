@@ -4,7 +4,7 @@
  * Fourth step for IDE-based AI flow. Watches for the AI agent to create
  * the artifact file using chokidar file watcher.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 820-962)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 820-962)
  */
 
 import path from "node:path";

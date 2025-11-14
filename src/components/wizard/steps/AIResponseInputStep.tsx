@@ -4,7 +4,7 @@
  * Fourth step for web-based AI flow. Instructs user to create the artifact
  * file themselves, then confirms when done.
  *
- * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 964-1064)
+ * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 964-1064)
  * Modified per user feedback: User creates file manually, we just confirm
  */
 
