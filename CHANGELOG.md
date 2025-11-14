@@ -1,5 +1,56 @@
 # @kodebase/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- [#248](https://github.com/kodebaseai/kodebase/pull/248) [`90061dc`](https://github.com/kodebaseai/kodebase/commit/90061dc896728511867bd9e4e608d6d12b29d20b) Thanks [@migcarva](https://github.com/migcarva)! - feat(cli): Add command with AI-assisted wizard, artifact picker, and test coverage improvements
+
+  Completed E.4 (Add Command & Wizard) milestone implementing comprehensive artifact creation flow:
+
+  **E.4.1: Wizard Flow & Step Components**
+
+  - AI-assisted wizard with 6 step components supporting both IDE and web-based AI workflows
+  - Dual-flow architecture: IDE flow uses chokidar file watcher (60s timeout), web flow manual creation with validation
+  - AI environment detection (CURSOR_IDE, VSCODE_CURSOR, VSCODE_PID, TERM_PROGRAM) with config-based fallback
+  - Context-aware AI prompt generation for natural language artifact creation
+  - Comprehensive wizard tests with state management and navigation validation
+
+  **E.4.2: Artifact Picker & Preview Components**
+
+  - ArtifactPicker with fuzzy search across ID, title, and type fields (exact=100, contains=80, sequence=60 scoring)
+  - ArtifactPreview displaying metadata, status, relationships, and validation errors
+  - Migrated from legacy ArtifactLoader to @kodebase/core APIs (loadAllArtifactPaths, readArtifact, parse functions)
+  - Dual-mode keyboard navigation (search input vs arrow key navigation) with hierarchical indentation
+  - Real-time filtering with useMemo and type-based artifact filtering
+
+  **E.4.3: Test Coverage & Bug Fixes**
+
+  - Improved CLI test coverage from 75.77% to 87.91% (355 tests passing)
+  - ai-environment.ts: 13.63% → 100% (11 comprehensive tests with environment isolation)
+  - parent-validation.ts: 30.76% → 100% (12 tests with proper mock constructors)
+  - errors.ts: 52.38% → 100% (33 tests for all error classes)
+  - Fixed TypeScript linting issues in git-branch.test.ts (removed as any assertions, proper type definitions)
+  - Fixed clipboard functionality in Context.tsx to only show success message when clipboard.write() succeeds (CI test fix)
+
+  **Technical Highlights:**
+
+  - ScaffoldingService integration for ID allocation with multi-letter initiative support (A, AA, AB)
+  - ArtifactService.createArtifact() replacing all direct YAML manipulation
+  - ReadinessService integration for parent artifact validation
+  - File watching with chokidar for IDE-based artifact creation
+  - Fuzzy search utility (fuzzy-search.ts) with configurable search fields and scoring
+  - Vitest mock constructors using named function expressions (not arrow functions)
+  - Environment variable isolation in tests using beforeEach cleanup
+
+  **Bug Fixes:**
+
+  - Fixed environment variable leakage between tests causing 4 test failures
+  - Fixed clipboard success message in CI environments (headless/no display)
+  - Fixed mock constructor "is not a constructor" errors with proper function expressions
+  - Fixed unused function parameter linting errors (cmd → \_cmd)
+  - Removed all non-null assertions with proper null checks and type guards
+
 ## 0.3.0
 
 ### Minor Changes

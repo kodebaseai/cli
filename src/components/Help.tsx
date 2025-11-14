@@ -66,6 +66,12 @@ export const Help: FC<HelpProps> = ({ command }) => {
         </Text>
         <Text>
           <Text color="green" bold>
+            setup{" "}
+          </Text>
+          <Text color="gray">Interactive setup wizard for configuration</Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
             tutorial{" "}
           </Text>
           <Text color="gray">Interactive tutorial for new users</Text>
@@ -603,6 +609,145 @@ function getCommandHelp(command: string): JSX.Element {
           <Text color="gray">
             Related: kb status &lt;id&gt;, kb start &lt;id&gt;
           </Text>
+        </Box>
+      );
+
+    case "setup":
+      return (
+        <Box flexDirection="column">
+          <Text color="cyan" bold>
+            kb setup - Initial configuration wizard
+          </Text>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Usage:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb setup [options]</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Description:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              Interactive 6-step wizard that configures Kodebase for your team.
+            </Text>
+            <Text>
+              Sets up environment detection, GitHub authentication, workflow
+              presets,
+            </Text>
+            <Text>configuration generation, and git hooks installation.</Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Options:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="cyan">
+                --preset=&lt;solo|small_team|enterprise&gt;{" "}
+              </Text>
+              <Text color="gray">Skip wizard, use preset</Text>
+            </Text>
+            <Text>
+              <Text color="cyan">--skip-auth </Text>
+              <Text color="gray">Skip GitHub authentication check</Text>
+            </Text>
+            <Text>
+              <Text color="cyan">--skip-hooks </Text>
+              <Text color="gray">Skip git hooks installation</Text>
+            </Text>
+            <Text>
+              <Text color="cyan">--force </Text>
+              <Text color="gray">Overwrite existing configuration</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Workflow presets:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="green">solo </Text>
+              <Text color="gray">
+                - Fast iteration, direct commits, minimal overhead
+              </Text>
+            </Text>
+            <Text>
+              <Text color="green">small_team </Text>
+              <Text color="gray">
+                - Cascade PRs with auto-merge on approval
+              </Text>
+            </Text>
+            <Text>
+              <Text color="green">enterprise </Text>
+              <Text color="gray">
+                - Cascade PRs with manual approval, strict controls
+              </Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Examples:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb setup</Text>
+              <Text color="gray"> # Interactive wizard</Text>
+            </Text>
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb setup --preset=solo</Text>
+              <Text color="gray"> # Quick setup with solo preset</Text>
+            </Text>
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb setup --force</Text>
+              <Text color="gray"> # Overwrite existing config</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            What happens:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>1. Environment detection (git repo, Node.js, GitHub)</Text>
+            <Text>2. GitHub authentication verification (gh CLI)</Text>
+            <Text>3. Preset selection (team size → workflow mapping)</Text>
+            <Text>
+              4. Configuration generation (.kodebase/config/settings.yml)
+            </Text>
+            <Text>
+              5. Git hooks installation (post-checkout, post-merge, etc.)
+            </Text>
+            <Text>6. Success confirmation with next steps</Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Related:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="gray">• </Text>
+              <Text>kb tutorial - Learn Kodebase interactively</Text>
+            </Text>
+            <Text>
+              <Text color="gray">• </Text>
+              <Text>kb help - Show all commands</Text>
+            </Text>
+          </Box>
         </Box>
       );
 

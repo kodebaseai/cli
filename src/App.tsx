@@ -9,6 +9,7 @@ import { Box, Text } from "ink";
 import type { FC } from "react";
 import { Add } from "./commands/Add.js";
 import { Context } from "./commands/Context.js";
+import { Setup } from "./commands/Setup.js";
 import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
 import { Tutorial } from "./commands/Tutorial.js";
@@ -225,6 +226,48 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
   // Handle tutorial command
   if (command === "tutorial") {
     return <Tutorial verbose={verbose} />;
+  }
+
+  // Handle setup command
+  if (command === "setup") {
+    // Parse preset flag (--preset=value)
+    const presetArg = commandArgs.find((arg) => arg.startsWith("--preset="));
+    const preset = presetArg?.split("=")[1] as
+      | "solo"
+      | "small_team"
+      | "enterprise"
+      | undefined;
+
+    // Validate preset value if provided
+    if (preset && !["solo", "small_team", "enterprise"].includes(preset)) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={
+              new Error(
+                `Invalid preset: ${preset}. Must be one of: solo, small_team, enterprise`,
+              )
+            }
+            verbose={verbose}
+          />
+        </Box>
+      );
+    }
+
+    // Parse other flags
+    const skipAuth = commandArgs.includes("--skip-auth");
+    const skipHooks = commandArgs.includes("--skip-hooks");
+    const force = commandArgs.includes("--force");
+
+    return (
+      <Setup
+        preset={preset}
+        skipAuth={skipAuth}
+        skipHooks={skipHooks}
+        force={force}
+        verbose={verbose}
+      />
+    );
   }
 
   // Unknown command - show error and help
