@@ -1,5 +1,153 @@
 # @kodebase/cli
 
+## 1.0.0
+
+### Major Changes
+
+- [#255](https://github.com/kodebaseai/kodebase/pull/255) [`3f292f0`](https://github.com/kodebaseai/kodebase/commit/3f292f018940f82bf4bc4cf751343e25c4cde4c9) Thanks [@migcarva](https://github.com/migcarva)! - Ships complete Kodebase CLI enabling artifact-driven AI development workflows with comprehensive command set, interactive wizards, git automation, and production-ready documentation.
+
+  **Foundation & Package Setup (E.1)**
+
+  - Complete CLI package structure with build toolchain (tsup, vitest, biome, TypeScript strict mode)
+  - Core types, error classes, and utilities with clean type re-exports
+  - React/Ink base components (ErrorHandler, StatusBadge, Version, Help)
+  - 92 comprehensive behavioral tests (74% coverage)
+  - Subprocess-based integration tests (50% faster than ink-testing-library)
+  - Modern JSX transform (react-jsx) for cleaner code
+
+  **Start & Status Commands (E.2)**
+
+  - `kb start` with readiness validation, branch creation, and AI context generation
+  - `kb status` with detailed/list/JSON display modes and advanced filtering
+  - EventTimeline and RelationshipList components with Unicode icons
+  - Clipboard integration via clipboardy for seamless context sharing
+  - `--submit` flag automation: branch push, draft PR creation, status transitions
+  - ReadinessService integration for dependency validation
+  - 162 comprehensive tests (82.41% coverage)
+
+  **Validate, Context & Tutorial Commands (E.3)**
+
+  - `kb validate` with ValidationService integration, --fix/--strict/--json flags
+  - `kb ctx` with AI-optimized context generation and three format options (standard/compact/detailed)
+  - `kb tutorial` with 7-step interactive walkthrough and state persistence
+  - `kb help <command>` system with detailed documentation for all commands
+  - Tutorial cleanup system with dynamic artifact detection
+  - Progress tracking and resume capability for tutorial sessions
+  - 243 comprehensive tests (85.47% coverage)
+
+  **Add Command & Wizard (E.4)**
+
+  - `kb add` command with AI-assisted wizard for artifact creation
+  - 6-step wizard components (TypeSelection, BasicInfo, Details, Relationships, Preview, Confirmation)
+  - Dual-flow architecture: IDE flow (file watcher) and Web flow (manual creation + validation)
+  - AI environment detection (CURSOR_IDE, VSCODE_CURSOR, VSCODE_PID, TERM_PROGRAM)
+  - ArtifactPicker with fuzzy search (exact=100, contains=80, sequence=60 scoring)
+  - ArtifactPreview displaying metadata, status, relationships, validation errors
+  - Migration from legacy to @kodebase/core APIs
+  - Test coverage improvements: 75.77% → 87.91% (355 tests passing)
+
+  **Setup, Polish & Ship (E.5)**
+
+  - `kb setup` with interactive 6-step setup wizard
+  - Team size presets (Solo: fast iteration, Small Team: cascade PRs, Enterprise: manual approval)
+  - GitHub authentication check via gh CLI
+  - Git hook installation (post-checkout, post-merge, post-commit)
+  - Shell completion script generation for bash/zsh
+  - Complete end-to-end workflow testing (init → add → start → ctx → status → validate)
+  - 367/367 tests passing with 87.69% coverage
+  - Performance validation: <400ms info commands, <700ms processing commands
+  - Comprehensive README.md (463 lines) with installation, quick start, command reference
+  - TypeDoc API documentation generation
+  - Troubleshooting guide for 4 common issues
+  - Configuration documentation (presets, file structure, git hooks)
+
+  **Complete Command Set (9 commands)**
+
+  - `kb add` - Interactive artifact creation with AI-assisted wizard
+  - `kb start` - Work automation with context generation and branch creation
+  - `kb status` - Display artifact details (--all for list view)
+  - `kb ctx` - Generate AI-ready context (3 format options)
+  - `kb validate` - Run validation checks with auto-fix
+  - `kb setup` - Interactive configuration wizard
+  - `kb tutorial` - 7-step interactive onboarding
+  - `kb help` - Command-specific help system
+  - `kb version` - Display version information
+
+  **Testing & Quality**
+
+  - 367/367 tests passing across all packages
+  - 87.69% total coverage (core: 88.79%, artifacts: 95.48%, git-ops: 91.10%, cli: 80.60%)
+  - Zero critical bugs and zero data loss verified
+  - Performance benchmarks validated
+  - Cross-platform validation (macOS and Linux)
+  - Subprocess-based integration tests for realistic behavioral validation
+
+  **Production-Ready**
+
+  - Complete documentation (README, TypeDoc API docs, troubleshooting)
+  - Installable via npm: `npm install -g @kodebase/cli`
+  - Git-ops automation working (hooks, cascades, PR creation)
+  - Context generation with auto-clipboard copy
+  - Error messages polished and actionable
+  - Installation tested end-to-end
+
+  Resolves E initiative - CLI MLP Version
+
+## 0.5.0
+
+### Minor Changes
+
+- [#253](https://github.com/kodebaseai/kodebase/pull/253) [`deb42c1`](https://github.com/kodebaseai/kodebase/commit/deb42c11286da5eb1f474c2e92ca39b4760a000e) Thanks [@migcarva](https://github.com/migcarva)! - feat(cli): complete setup wizard, polish, and ship v0.1.0-alpha.1
+
+  Implements complete setup wizard, comprehensive testing, and production-ready documentation for the Kodebase CLI:
+
+  **Setup Command & Wizard (E.5.1)**
+
+  - Interactive 6-step setup wizard with Welcome, GitConfig, Preferences, ShellCompletion, and Completion steps
+  - Team size presets (Solo, Small Team, Enterprise) with tailored configurations
+  - GitHub authentication check via gh CLI integration
+  - Git hook installation (post-checkout, post-merge, post-commit)
+  - Configuration persistence to .kodebase/config/settings.yml
+  - Shell completion script generation for bash/zsh
+
+  **Final Testing & Validation (E.5.2)**
+
+  - Complete end-to-end workflow testing (init → add → start → ctx → status → validate)
+  - All 367 tests passing with 87.69% coverage
+  - Performance validation: <400ms for info commands, <700ms for processing commands
+  - Zero critical bugs and zero data loss across all operations
+  - Cross-platform validation (macOS and Linux)
+  - Integration testing with all 9 core commands
+
+  **Documentation & Release (E.5.3)**
+
+  - Comprehensive README.md with installation, quick start, and command reference
+  - Complete documentation for all 9 commands with detailed options
+  - TypeDoc API documentation generation setup
+  - Troubleshooting guide for common issues
+  - Configuration documentation (presets, file structure)
+  - Development setup and testing instructions
+  - Contributing guidelines and support channels
+
+  **Testing & Quality**
+
+  - 367/367 tests passing across all packages
+  - 87.69% total coverage (core: 88.79%, artifacts: 95.48%, git-ops: 91.10%, cli: 80.60%)
+  - Performance benchmarks validated
+  - Error messages polished and actionable
+  - Installation tested via npm link
+  - Complete workflow verified end-to-end
+
+  **Ready for Release**
+
+  - Package built and ready (pnpm build)
+  - Documentation complete and accurate
+  - All acceptance criteria met
+  - Zero critical bugs
+  - Production-ready for v0.1.0-alpha.1 release
+
+  Resolves E.5 milestone - Setup Wizard, Polish & Ship
+
 ## 0.4.0
 
 ### Minor Changes
