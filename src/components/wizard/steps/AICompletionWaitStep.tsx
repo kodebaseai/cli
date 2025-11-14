@@ -11,11 +11,12 @@ import path from "node:path";
 import { ArtifactService, ValidationService } from "@kodebase/artifacts";
 import { resolveArtifactPaths, type TAnyArtifact } from "@kodebase/core";
 import chokidar from "chokidar";
-import { Box, Newline, Text } from "ink";
+import { Box, Newline, Text, useInput } from "ink";
 import Spinner from "ink-spinner";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 
+import { parseArtifactFromPath } from "../../../utils/artifact-id-parser.js";
 import type { StepComponentProps } from "../types.js";
 
 interface WaitResult {
@@ -35,10 +36,21 @@ interface WaitResult {
 export const AICompletionWaitStep: FC<StepComponentProps> = ({
   state,
   onUpdate,
+  onNext,
 }) => {
   const [isWaiting, setIsWaiting] = useState(true);
   const [waitResult, setWaitResult] = useState<WaitResult | null>(null);
   const [timeoutReached, setTimeoutReached] = useState(false);
+
+  // Handle keyboard input when artifact is ready
+  useInput(
+    (_input, key) => {
+      if (waitResult?.success && key.return) {
+        onNext();
+      }
+    },
+    { isActive: waitResult?.success === true },
+  );
 
   useEffect(() => {
     const waitForArtifact = async () => {
@@ -55,6 +67,7 @@ export const AICompletionWaitStep: FC<StepComponentProps> = ({
         const result = await watchForArtifactFile({
           parentId: state.parentId,
           artifactType: state.artifactType,
+          existingFilePath: state.filePath,
         });
 
         setWaitResult(result);
@@ -83,38 +96,44 @@ export const AICompletionWaitStep: FC<StepComponentProps> = ({
     };
 
     waitForArtifact();
-  }, [state.parentId, state.artifactType, onUpdate]);
+  }, [state.parentId, state.artifactType, state.filePath, onUpdate]);
 
   if (isWaiting) {
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 4: Waiting for AI...
+          Waiting for AI...
         </Text>
         <Newline />
 
         <Text color="green">📋 Prompt copied to clipboard!</Text>
         <Newline />
 
-        <Text>Waiting for your AI agent to create the artifact file...</Text>
+        {state.filePath && (
+          <>
+            <Text color="yellow">📄 Scaffold file: {state.filePath}</Text>
+            <Newline />
+          </>
+        )}
+
+        <Text>Waiting for your AI agent to fill in the artifact file...</Text>
         <Newline />
 
         <Box>
           <Text color="yellow">
             <Spinner type="dots" />
           </Text>
-          <Text> Watching for file creation...</Text>
+          <Text>
+            {" "}
+            {state.filePath
+              ? "Watching for file changes..."
+              : "Watching for file creation..."}
+          </Text>
         </Box>
         <Newline />
 
-        <Text color="gray" dimColor>
-          Expected path: .kodebase/artifacts/
-          {state.parentId ? `${state.parentId}.*` : "*"}/
-        </Text>
-        <Newline />
-
         <Text color="gray">
-          The wizard will automatically detect when the file is created.
+          The wizard will automatically detect when the file is completed.
         </Text>
         <Text color="gray">Press ESC to cancel</Text>
       </Box>
@@ -125,7 +144,7 @@ export const AICompletionWaitStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 4: Waiting for AI...
+          Waiting for AI...
         </Text>
         <Newline />
 
@@ -155,7 +174,7 @@ export const AICompletionWaitStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 4: Waiting for AI...
+          Waiting for AI...
         </Text>
         <Newline />
 
@@ -190,7 +209,7 @@ export const AICompletionWaitStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 4: AI Completion
+          AI Completion
         </Text>
         <Newline />
 
@@ -224,13 +243,16 @@ export const AICompletionWaitStep: FC<StepComponentProps> = ({
 };
 
 /**
- * Watch for artifact file creation using chokidar
+ * Watch for artifact file changes using chokidar
+ *
+ * Now watches for modifications to the scaffold file rather than creation
  */
 async function watchForArtifactFile(options: {
   parentId?: string;
   artifactType: string;
+  existingFilePath?: string;
 }): Promise<WaitResult> {
-  const { parentId } = options;
+  const { parentId, existingFilePath } = options;
   const artifactService = new ArtifactService();
   const validationService = new ValidationService();
 
@@ -238,39 +260,117 @@ async function watchForArtifactFile(options: {
   const baseDir = process.cwd();
   const artifactsDir = path.join(baseDir, ".kodebase/artifacts");
 
-  // Watch pattern - be flexible with slugs
-  const watchPattern = parentId
-    ? path.join(artifactsDir, `**/${parentId}.*/*.yml`)
-    : path.join(artifactsDir, "*/*.yml");
+  // If we have an existing file path (scaffold), we need to watch both:
+  // 1. The specific scaffold file (for in-place edits)
+  // 2. Any new files with the same ID (for AI creating new directories)
+  let watchPattern: string | string[];
+  if (existingFilePath) {
+    const id = path.basename(existingFilePath, ".yml");
+    // Watch both the scaffold file AND any new directories with the same ID
+    watchPattern = [
+      existingFilePath, // Watch the scaffold for changes
+      path.join(artifactsDir, `${id}.*`, `${id}.yml`), // Watch for new files with same ID
+    ];
+  } else {
+    // Legacy: watch for new files matching the pattern
+    watchPattern = parentId
+      ? path.join(artifactsDir, `**/${parentId}.*/*.yml`)
+      : path.join(artifactsDir, "*/*.yml");
+  }
 
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       watcher.close();
-      reject(new Error("Timeout waiting for AI to create artifact (60s)"));
+      reject(new Error("Timeout waiting for AI to complete artifact (60s)"));
     }, 60000);
 
     const watcher = chokidar.watch(watchPattern, {
-      ignoreInitial: true,
+      // When watching scaffold + new files, we want:
+      // - Don't ignore initial for the scaffold (to detect changes)
+      // - Ignore initial for new patterns (only want new files)
+      // Since we're mixing both, use false to catch everything
+      ignoreInitial: false,
       awaitWriteFinish: {
         stabilityThreshold: 500,
         pollInterval: 100,
       },
     });
 
-    watcher.on("add", async (filePath) => {
-      clearTimeout(timeout);
-      watcher.close();
-
+    // Watch for both 'add' (new files) and 'change' (scaffold updates)
+    const handleFileEvent = async (filePath: string) => {
       try {
-        // Extract ID from file path
-        const id = path.basename(filePath, ".yml");
+        // Extract ID and slug from file path using utility function
+        const { id, slug } = parseArtifactFromPath(filePath);
 
         // Read the artifact
-        const artifact = await artifactService.getArtifact({ id, baseDir });
+        const artifact = await artifactService.getArtifact({
+          id,
+          slug,
+          baseDir,
+        });
 
-        // Get file path using resolveArtifactPaths
+        // Check if this is just a scaffold (empty content sections)
+        // Don't trigger on scaffold creation, only on actual completion
+        // Determine artifact type from ID (A = initiative, A.1 = milestone, A.1.1 = issue)
+        const idParts = id.split(".");
+        const isInitiative = idParts.length === 1;
+        let isScaffold = false;
+
+        if (isInitiative) {
+          // Initiatives have 'vision' field and scope/success_criteria arrays
+          const content = artifact.content as {
+            vision?: string;
+            scope?: { in?: string[]; out?: string[] };
+            success_criteria?: string[];
+          };
+          const vision = content?.vision;
+          const scopeIn = content?.scope?.in;
+          const successCriteria = content?.success_criteria;
+
+          // Check if this is a scaffold by looking for TODO placeholders or empty content
+          const hasVisionTodo =
+            !vision ||
+            vision.trim() === "" ||
+            vision === ">" ||
+            vision.includes("TODO");
+          const hasScopeInTodo =
+            scopeIn &&
+            scopeIn.length > 0 &&
+            scopeIn[0] !== undefined &&
+            scopeIn[0].includes("TODO");
+          const hasSuccessCriteriaTodo =
+            successCriteria &&
+            successCriteria.length > 0 &&
+            successCriteria[0] !== undefined &&
+            successCriteria[0].includes("TODO");
+
+          isScaffold =
+            hasVisionTodo ||
+            Boolean(hasScopeInTodo) ||
+            Boolean(hasSuccessCriteriaTodo);
+        } else {
+          // Milestones and Issues have 'summary' field
+          const summary = (artifact.content as { summary?: string })?.summary;
+          isScaffold =
+            !summary ||
+            summary.trim() === "" ||
+            summary === ">" ||
+            summary.includes("TODO");
+        }
+
+        if (isScaffold) {
+          // This is just the scaffold, keep waiting for real content
+          return;
+        }
+
+        // File has real content, stop watching
+        clearTimeout(timeout);
+        watcher.close();
+
+        // Get file path using resolveArtifactPaths (pass the slug we extracted!)
         const { filePath: resolvedFilePath } = await resolveArtifactPaths({
           id,
+          slug,
           baseDir,
         });
 
@@ -300,12 +400,16 @@ async function watchForArtifactFile(options: {
         resolve({
           success: false,
           errors: [
-            `Failed to parse AI-created file: ${error instanceof Error ? error.message : "Unknown error"}`,
+            `Failed to parse AI-completed file: ${error instanceof Error ? error.message : "Unknown error"}`,
           ],
           filePath,
         });
       }
-    });
+    };
+
+    // Watch for both file creation and changes
+    watcher.on("add", handleFileEvent);
+    watcher.on("change", handleFileEvent);
 
     watcher.on("error", (error) => {
       clearTimeout(timeout);

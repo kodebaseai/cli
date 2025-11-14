@@ -14,7 +14,7 @@ import {
   ValidationService,
 } from "@kodebase/artifacts";
 import { resolveArtifactPaths, type TAnyArtifact } from "@kodebase/core";
-import { Box, Newline, Text } from "ink";
+import { Box, Newline, Text, useInput } from "ink";
 import type { FC } from "react";
 import { useState } from "react";
 
@@ -28,6 +28,7 @@ import type { StepComponentProps } from "../types.js";
 export const AIResponseInputStep: FC<StepComponentProps> = ({
   state,
   onUpdate,
+  onNext,
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string>("");
@@ -35,7 +36,7 @@ export const AIResponseInputStep: FC<StepComponentProps> = ({
     useState<TAnyArtifact | null>(null);
   const [filePath, setFilePath] = useState<string>("");
 
-  const _handleConfirm = async () => {
+  const handleConfirm = async () => {
     setIsValidating(true);
     setValidationError("");
 
@@ -112,11 +113,27 @@ export const AIResponseInputStep: FC<StepComponentProps> = ({
     }
   };
 
+  // Handle keyboard input
+  useInput(
+    (_input, key) => {
+      if (key.return) {
+        if (validatedArtifact) {
+          // Artifact validated - proceed to next step
+          onNext();
+        } else if (!isValidating) {
+          // User says file is created - validate it
+          handleConfirm();
+        }
+      }
+    },
+    { isActive: !isValidating },
+  );
+
   if (isValidating) {
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 4: AI Response Input
+          Validating Artifact
         </Text>
         <Newline />
         <Text color="yellow">Validating artifact...</Text>
@@ -132,7 +149,7 @@ export const AIResponseInputStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 4: AI Response Input
+          Validating Artifact
         </Text>
         <Newline />
 
@@ -169,7 +186,7 @@ export const AIResponseInputStep: FC<StepComponentProps> = ({
   return (
     <Box flexDirection="column">
       <Text bold color="cyan">
-        Step 4: AI Response Input
+        Paste AI Response
       </Text>
       <Text color="gray">
         Creating: {artifactTypeLabel}

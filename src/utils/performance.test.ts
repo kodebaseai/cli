@@ -364,3 +364,6 @@ describe("Edge cases", () => {
     mock.mockRestore();
   });
 });
+
+// Note: usePerformanceTracking hook is tested in integration tests with actual React components
+// Unit testing React hooks with ESM modules has limitations with spying on exported functions

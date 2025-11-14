@@ -7,7 +7,7 @@
  * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md
  */
 
-import type { TArtifactType } from "@kodebase/core";
+import type { TAnyArtifact, TArtifactType } from "@kodebase/core";
 import { Box, Newline, Text, useInput } from "ink";
 import type { FC } from "react";
 import { useState } from "react";
@@ -18,12 +18,28 @@ import { ObjectiveInputStep } from "./steps/ObjectiveInputStep.js";
 import { PreviewConfirmationStep } from "./steps/PreviewConfirmationStep.js";
 import { TypeParentSelectionStep } from "./steps/TypeParentSelectionStep.js";
 import {
+  type BatchCreationContext,
   DEFAULT_WIZARD_STATE,
   STEP_ORDER_IDE,
   STEP_ORDER_WEB,
   type WizardState,
   type WizardStep,
 } from "./types.js";
+
+export interface WizardCompletionResult {
+  /** The generated artifact */
+  artifact: TAnyArtifact;
+  /** Artifact type */
+  artifactType: TArtifactType;
+  /** Parent ID (if applicable) */
+  parentId?: string;
+  /** AI-generated slug */
+  slug?: string;
+  /** Allocated artifact ID (already created in Step 3) */
+  id?: string;
+  /** File path where artifact was created (already created in Step 3) */
+  filePath?: string;
+}
 
 export interface WizardFlowProps {
   verbose?: boolean;
@@ -33,6 +49,14 @@ export interface WizardFlowProps {
   parentId?: string;
   /** Pre-filled objective (for direct mode) */
   objective?: string;
+  /** Callback when wizard completes successfully */
+  onComplete?: (result: WizardCompletionResult) => void;
+  /** Callback when branch is created */
+  onBranchCreated?: (branchName: string, prUrl?: string) => void;
+  /** Created artifacts in current session for tree view */
+  createdArtifacts?: string[];
+  /** Batch creation context (for tracking branch creation) */
+  batchContext?: BatchCreationContext | null;
 }
 
 /**
@@ -46,14 +70,38 @@ export const WizardFlow: FC<WizardFlowProps> = ({
   artifactType,
   parentId,
   objective,
+  onComplete,
+  batchContext,
 }) => {
-  const [wizardState, setWizardState] = useState<WizardState>(() => ({
-    ...DEFAULT_WIZARD_STATE,
-    // Pre-fill from props if provided (direct mode)
-    artifactType: artifactType as TArtifactType,
-    parentId,
-    objective: objective || "",
-  }));
+  const [wizardState, setWizardState] = useState<WizardState>(() => {
+    console.log("[DEBUG WizardFlow] Initializing with props:", {
+      artifactType,
+      parentId,
+      objective,
+      hasBatchContext: !!batchContext,
+    });
+
+    // Determine starting step based on what's pre-filled
+    let startStep: WizardStep = "type-parent-selection";
+
+    // If artifactType is provided, skip type selection
+    if (artifactType) {
+      console.log(
+        "[DEBUG WizardFlow] artifactType provided, skipping to objective-input",
+      );
+      startStep = "objective-input";
+    }
+
+    return {
+      ...DEFAULT_WIZARD_STATE,
+      currentStep: startStep,
+      // Pre-fill from props if provided (direct mode / batch creation)
+      artifactType: artifactType as TArtifactType,
+      parentId,
+      objective: objective || "",
+      batchContext: batchContext || undefined,
+    };
+  });
   const [isExiting, setIsExiting] = useState(false);
 
   // Determine step order based on AI environment
@@ -81,7 +129,34 @@ export const WizardFlow: FC<WizardFlowProps> = ({
         }));
       }
     } else {
-      // Wizard complete - proceed to hierarchy validation
+      // Wizard complete - call onComplete callback if provided
+      if (onComplete && wizardState.artifact && wizardState.artifactType) {
+        // Extract ID from filePath (e.g., ".kodebase/artifacts/F.ide-extension/F.yml" → "F")
+        const id = wizardState.filePath
+          ? wizardState.filePath.split("/").pop()?.replace(".yml", "")
+          : undefined;
+
+        // Extract slug from filePath (e.g., ".kodebase/artifacts/F.ide-extension/F.yml" → "ide-extension")
+        const slug = wizardState.filePath
+          ? wizardState.filePath
+              .split("/")
+              .slice(-2, -1)[0]
+              ?.split(".")
+              .slice(1)
+              .join(".")
+          : undefined;
+
+        onComplete({
+          artifact: wizardState.artifact,
+          artifactType: wizardState.artifactType,
+          parentId: wizardState.parentId,
+          slug,
+          id,
+          filePath: wizardState.filePath,
+        });
+      }
+
+      // Mark wizard as complete
       setWizardState((prev) => ({
         ...prev,
         isComplete: true,
@@ -109,9 +184,13 @@ export const WizardFlow: FC<WizardFlowProps> = ({
 
   // Global keyboard handler for navigation
   useInput((input, key) => {
+    // Disable keyboard shortcuts during steps with active text input
+    // to prevent conflicts (e.g., typing 'b' in objective field)
+    const isTextInputStep = wizardState.currentStep === "objective-input";
+
     if (key.escape) {
       handleCancel();
-    } else if (input === "b" || input === "B") {
+    } else if (!isTextInputStep && (input === "b" || input === "B")) {
       if (currentStepIndex > 0) {
         handleBack();
       }
@@ -152,6 +231,7 @@ export const WizardFlow: FC<WizardFlowProps> = ({
       onBack: handleBack,
       onCancel: handleCancel,
       verbose,
+      batchContext: wizardState.batchContext || null,
     };
 
     switch (wizardState.currentStep) {
@@ -176,54 +256,29 @@ export const WizardFlow: FC<WizardFlowProps> = ({
     }
   };
 
-  const getStepName = (step: WizardStep): string => {
-    switch (step) {
-      case "type-parent-selection":
-        return "Type & Parent Selection";
-      case "objective-input":
-        return "Objective Input";
-      case "ai-prompt-generation":
-        return "AI Prompt Generation";
-      case "ai-completion-wait":
-        return "Waiting for AI";
-      case "ai-response-input":
-        return "AI Response Input";
-      case "preview-confirmation":
-        return "Preview & Confirmation";
-      default:
-        return step;
+  // Get context-aware title based on artifact type and parent
+  const getContextTitle = () => {
+    if (!wizardState.artifactType) {
+      return "Creating new artifact";
     }
+
+    const typeLabel =
+      wizardState.artifactType.charAt(0).toUpperCase() +
+      wizardState.artifactType.slice(1);
+
+    if (wizardState.parentId) {
+      return `Adding ${typeLabel} to ${wizardState.parentId}`;
+    }
+
+    return `Creating ${typeLabel}`;
   };
 
   return (
     <Box flexDirection="column">
       <Newline />
       <Text bold color="cyan">
-        🧙 Artifact Creation Wizard
+        🧙 {getContextTitle()}
       </Text>
-
-      {/* Progress indicator */}
-      <Box>
-        <Text color="gray">
-          Step {currentStepIndex + 1} of {currentStepOrder.length}:
-        </Text>
-        <Text color="yellow" bold>
-          {" "}
-          {getStepName(wizardState.currentStep)}
-        </Text>
-      </Box>
-
-      {/* Progress bar */}
-      <Box>
-        <Text color="gray">[</Text>
-        {currentStepOrder.map((step, index) => (
-          <Text key={step} color={index <= currentStepIndex ? "green" : "gray"}>
-            {index <= currentStepIndex ? "●" : "○"}
-          </Text>
-        ))}
-        <Text color="gray">]</Text>
-      </Box>
-
       <Newline />
 
       {renderCurrentStep()}

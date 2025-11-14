@@ -108,8 +108,20 @@ export interface WizardState {
   /** File path where artifact will be/was created */
   filePath?: string;
 
+  /** Allocated artifact ID (e.g., "F", "A.1", "B.2.3") */
+  allocatedId?: string;
+
+  /** Draft PR URL created for this artifact */
+  draftPrUrl?: string;
+
+  /** Git branch created for this artifact */
+  createdBranch?: string;
+
   /** Batch creation context (if creating initiative/milestone) */
   batchContext?: BatchCreationContext;
+
+  /** Hierarchy validation result from Step 5 */
+  hierarchyValidation?: HierarchyValidationResult;
 
   /** Wizard completion status */
   isComplete: boolean;
@@ -134,6 +146,8 @@ export interface StepComponentProps {
   onCancel: () => void;
   /** Verbose mode flag */
   verbose?: boolean;
+  /** Batch creation context (passed from parent) */
+  batchContext?: BatchCreationContext | null;
 }
 
 /**

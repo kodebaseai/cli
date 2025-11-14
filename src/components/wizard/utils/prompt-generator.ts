@@ -10,11 +10,7 @@
 import path from "node:path";
 
 import { ArtifactService, QueryService } from "@kodebase/artifacts";
-import {
-  resolveArtifactPaths,
-  type TAnyArtifact,
-  type TArtifactType,
-} from "@kodebase/core";
+import type { TAnyArtifact, TArtifactType } from "@kodebase/core";
 import yaml from "yaml";
 
 import type { AIEnvironment } from "../types.js";
@@ -25,6 +21,10 @@ export interface PromptGenerationOptions {
   objective: string;
   aiEnvironment: AIEnvironment;
   baseDir?: string;
+  /** Pre-allocated ID (if scaffold file already created) */
+  allocatedId?: string;
+  /** Pre-determined file path (if scaffold file already created) */
+  filePath?: string;
 }
 
 export interface GeneratedPrompt {
@@ -45,12 +45,28 @@ export async function generateAIPrompt(
     objective,
     aiEnvironment,
     baseDir = process.cwd(),
+    allocatedId,
+    filePath,
   } = options;
 
   // Load parent artifact context if needed
   let parentArtifact: TAnyArtifact | null = null;
   let parentPath: string | undefined;
   let nextId: string;
+
+  // Use pre-allocated ID if available (from scaffold creation in Step 3)
+  if (allocatedId) {
+    nextId = allocatedId;
+  } else {
+    // Fallback: calculate next ID (legacy flow)
+    if (parentId) {
+      // Determine next available ID for child artifacts
+      nextId = await getNextAvailableId(parentId, artifactType, baseDir);
+    } else {
+      // For initiatives, use next available letter
+      nextId = await getNextInitiativeId(baseDir);
+    }
+  }
 
   if (parentId) {
     const artifactService = new ArtifactService();
@@ -59,15 +75,22 @@ export async function generateAIPrompt(
       baseDir,
     });
 
-    // Get parent file path
-    const { filePath } = await resolveArtifactPaths({ id: parentId, baseDir });
-    parentPath = filePath;
+    // Find parent file path without requiring slug
+    // The artifact service can find the file by ID alone
+    const { loadAllArtifactPaths, getArtifactIdFromPath } = await import(
+      "@kodebase/core"
+    );
+    const artifactsRoot = path.join(baseDir, ".kodebase", "artifacts");
+    const allPaths = await loadAllArtifactPaths(artifactsRoot);
 
-    // Determine next available ID
-    nextId = await getNextAvailableId(parentId, artifactType, baseDir);
-  } else {
-    // For initiatives, use next available letter
-    nextId = await getNextInitiativeId(baseDir);
+    const matchingPath = allPaths.find((filePath: string) => {
+      const fileId = getArtifactIdFromPath(filePath);
+      return fileId === parentId;
+    });
+
+    if (matchingPath) {
+      parentPath = matchingPath;
+    }
   }
 
   // Get git user info for metadata
@@ -85,6 +108,7 @@ export async function generateAIPrompt(
         objective,
         gitUser,
         baseDir,
+        allocatedFilePath: filePath,
       }),
       expectedId: nextId,
       expectedPath: parentPath
@@ -117,6 +141,7 @@ function generateIDEPrompt(options: {
   objective: string;
   gitUser: string;
   baseDir: string;
+  allocatedFilePath?: string;
 }): string {
   const {
     artifactType,
@@ -126,11 +151,19 @@ function generateIDEPrompt(options: {
     objective,
     gitUser,
     baseDir,
+    allocatedFilePath,
   } = options;
 
   const targetDir = parentPath
     ? path.dirname(parentPath)
     : path.join(baseDir, ".kodebase/artifacts");
+
+  // If a file path was already allocated (scaffold created), use that specific path
+  const actualFilePath =
+    allocatedFilePath || `${targetDir}/${nextId}.<slug>/${nextId}.yml`;
+  const actualDir = allocatedFilePath
+    ? path.dirname(allocatedFilePath)
+    : `${targetDir}/${nextId}.<slug>/`;
 
   return `Create a Kodebase artifact file with the following details:
 
@@ -138,18 +171,18 @@ function generateIDEPrompt(options: {
 - Type: ${artifactType}
 - ${parentId ? `Parent: ${parentId}` : "Root artifact (initiative)"}
 ${parentPath ? `- Parent path: ${parentPath}` : ""}
-- Next available ID: ${nextId}
-- Target directory: ${targetDir}
+- Artifact ID: ${nextId}
+- Target directory: ${actualDir}
 
 **Objective:**
 ${objective}
 
 **Instructions:**
 1. ${parentPath ? `Read the parent artifact at ${parentPath} to understand context` : "This is a root initiative"}
-2. Read the artifact schema at packages/core/src/types/artifacts/${artifactType}.ts
+2. ${allocatedFilePath ? `A scaffold file has already been created at: ${allocatedFilePath}` : `Read the artifact schema at packages/core/src/types/artifacts/${artifactType}.ts`}
 3. Check concrete examples by exploring existing ${artifactType} artifacts
 4. Generate a complete ${artifactType} artifact following the schema
-5. **Create the artifact file** with this structure:
+5. **${allocatedFilePath ? "Fill in" : "Create"} the artifact file** with this structure:
    - metadata.title: Clear, concise title (3-100 chars)
    - metadata.summary: Detailed description based on objective
    - metadata.priority: Assess priority (critical/high/medium/low)
@@ -165,13 +198,26 @@ ${objective}
    - content.acceptance_criteria: Clear success criteria
 
 **Important:**
-- Generate a slug from the title (lowercase, hyphens, no special chars)
-- Create the directory: ${targetDir}/${nextId}.<slug>/
-- Write the YAML file: ${targetDir}/${nextId}.<slug>/${nextId}.yml
-- The wizard will detect the file and show a preview for confirmation
+${
+  allocatedFilePath
+    ? `- The scaffold file is at: ${allocatedFilePath}
+- Replace ALL "TODO:" placeholders with actual content
+- PRESERVE the estimation field - do NOT remove it
+- The wizard is watching this file for changes`
+    : `- Generate a slug from the title (lowercase, hyphens, no special chars)
+- Create the directory: ${actualDir}
+- Write the YAML file: ${actualFilePath}
+- Include the estimation field for milestones and issues`
+}
+- The wizard will detect the ${allocatedFilePath ? "updated" : "new"} file and show a preview for confirmation
 
 **Output:**
-Just confirm when the file is created. The wizard is waiting for the file to appear.`;
+After ${allocatedFilePath ? "updating" : "creating"} the file, run this command to validate it:
+\`\`\`
+kb validate ${nextId}
+\`\`\`
+
+Then confirm when the file is ready. The wizard is waiting for the file to ${allocatedFilePath ? "be filled in" : "appear"}.`;
 }
 
 /**

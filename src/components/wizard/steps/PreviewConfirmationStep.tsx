@@ -7,11 +7,15 @@
  * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 1067-1476)
  */
 
-import { Box, Newline, Text } from "ink";
+import { Box, Newline, Text, useInput } from "ink";
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import type { StepComponentProps } from "../types.js";
+import { HierarchyValidationService } from "../../../services/hierarchy-validation.js";
+import type {
+  HierarchyValidationResult,
+  StepComponentProps,
+} from "../types.js";
 
 /**
  * Preview & Confirmation Step Component
@@ -23,20 +27,62 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
   state,
   onUpdate,
   onNext,
+  batchContext,
 }) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [validation, setValidation] =
+    useState<HierarchyValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(true);
 
-  const _handleConfirm = () => {
+  // Run hierarchy validation when step loads
+  useEffect(() => {
+    const runValidation = async () => {
+      if (!state.allocatedId || !state.artifactType) {
+        setIsValidating(false);
+        return;
+      }
+
+      try {
+        const baseDir = process.cwd();
+        const hierarchyService = new HierarchyValidationService(baseDir);
+        const result = await hierarchyService.validateHierarchyBatch(
+          state.allocatedId,
+          state.artifactType,
+          batchContext || undefined,
+        );
+        setValidation(result);
+      } catch (error) {
+        console.error("Validation error:", error);
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    runValidation();
+  }, [state.allocatedId, state.artifactType, batchContext]);
+
+  const handleConfirm = () => {
     setIsConfirmed(true);
+    // Store validation result in state for Add command to use
+    if (validation) {
+      onUpdate({ hierarchyValidation: validation });
+    }
     onUpdate({ isComplete: true });
     onNext();
   };
+
+  // Handle keyboard input
+  useInput((_input, key) => {
+    if (!isConfirmed && key.return) {
+      handleConfirm();
+    }
+  });
 
   if (!state.artifact) {
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 5: Preview & Confirmation
+          Preview & Confirmation
         </Text>
         <Newline />
         <Text color="red">✗ No artifact to preview</Text>
@@ -85,7 +131,7 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 5: Confirmation
+          Artifact Created
         </Text>
         <Newline />
 
@@ -109,7 +155,7 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
   return (
     <Box flexDirection="column">
       <Text bold color="cyan">
-        Step 5: Preview & Confirmation
+        Preview & Confirmation
       </Text>
       <Text color="gray">Review your artifact before finalizing</Text>
       <Newline />
@@ -138,9 +184,10 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
             <Box>
               <Text color="gray">ID: </Text>
               <Text color="white" bold>
-                {state.parentId
-                  ? `${state.parentId}.${metadata.title.split(" ")[0]}`
-                  : "A"}
+                {state.allocatedId ||
+                  (state.parentId
+                    ? `${state.parentId}.${metadata.title.split(" ")[0]}`
+                    : "A")}
               </Text>
             </Box>
             <Box>
@@ -245,6 +292,58 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
       </Box>
 
       <Newline />
+
+      {/* Hierarchy Validation Status */}
+      {isValidating && (
+        <Box flexDirection="column" marginBottom={1}>
+          <Text color="yellow">⏳ Validating hierarchy...</Text>
+        </Box>
+      )}
+
+      {!isValidating && validation && (
+        <Box
+          flexDirection="column"
+          borderStyle="single"
+          borderColor={validation.valid ? "green" : "yellow"}
+          paddingX={1}
+          paddingY={1}
+          marginBottom={1}
+        >
+          <Box>
+            <Text color={validation.valid ? "green" : "yellow"} bold>
+              {validation.valid ? "✓" : "⚠"}{" "}
+            </Text>
+            <Text color="white" bold>
+              Hierarchy Status
+            </Text>
+          </Box>
+          <Box marginLeft={2}>
+            <Text color="white">{validation.message}</Text>
+          </Box>
+
+          {!validation.valid && validation.actions.length > 0 && (
+            <>
+              <Newline />
+              <Box marginLeft={2} flexDirection="column">
+                <Text color="yellow" dimColor>
+                  After confirming, you'll be prompted to:
+                </Text>
+                {validation.actions.map((action) => (
+                  <Box key={action.label}>
+                    <Text color="yellow">
+                      {action.isRequired ? "• " : "• "}
+                    </Text>
+                    <Text color={action.isRequired ? "yellow" : "gray"}>
+                      {action.label}
+                      {action.isRequired && " (REQUIRED)"}
+                    </Text>
+                  </Box>
+                ))}
+              </Box>
+            </>
+          )}
+        </Box>
+      )}
 
       <Box>
         <Text color="green" bold>

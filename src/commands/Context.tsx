@@ -195,7 +195,7 @@ export const Context: FC<ContextCommandProps> = ({
       <Text>{result.context}</Text>
 
       {/* Success messages */}
-      {result.copyRequested && (
+      {result.copied && (
         <Box marginTop={1}>
           <Text color="green">✓ Context copied to clipboard</Text>
         </Box>

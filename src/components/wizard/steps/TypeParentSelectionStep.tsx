@@ -169,7 +169,7 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 1: Type & Parent Selection
+          Choose Artifact Type
         </Text>
         <Text color="gray">What type of artifact do you want to create?</Text>
         <Newline />
@@ -181,10 +181,6 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
             value: opt,
           }))}
           onSelect={handleTypeSelect}
-          onHighlight={(item) => {
-            // Optional: could show description on highlight
-            console.log(item);
-          }}
         />
 
         <Newline />
@@ -212,10 +208,10 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
       return (
         <Box flexDirection="column">
           <Text bold color="cyan">
-            Step 1: Type & Parent Selection
+            Select Parent
           </Text>
           <Text color="gray">
-            Creating: {state.artifactType?.charAt(0).toUpperCase()}
+            Creating {state.artifactType?.charAt(0).toUpperCase()}
             {state.artifactType?.slice(1)}
           </Text>
           <Newline />
@@ -228,10 +224,10 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
       return (
         <Box flexDirection="column">
           <Text bold color="cyan">
-            Step 1: Type & Parent Selection
+            Select Parent
           </Text>
           <Text color="gray">
-            Creating: {state.artifactType?.charAt(0).toUpperCase()}
+            Creating {state.artifactType?.charAt(0).toUpperCase()}
             {state.artifactType?.slice(1)}
           </Text>
           <Newline />
@@ -248,10 +244,10 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
       return (
         <Box flexDirection="column">
           <Text bold color="cyan">
-            Step 1: Type & Parent Selection
+            Select Parent
           </Text>
           <Text color="gray">
-            Creating: {state.artifactType?.charAt(0).toUpperCase()}
+            Creating {state.artifactType?.charAt(0).toUpperCase()}
             {state.artifactType?.slice(1)}
           </Text>
           <Newline />

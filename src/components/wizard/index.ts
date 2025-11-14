@@ -16,5 +16,8 @@ export {
   getAIEnvironmentName,
 } from "./utils/ai-environment.js";
 export { generateAIPrompt } from "./utils/prompt-generator.js";
-export type { WizardFlowProps } from "./WizardFlow.js";
+export type {
+  WizardCompletionResult,
+  WizardFlowProps,
+} from "./WizardFlow.js";
 export { WizardFlow } from "./WizardFlow.js";

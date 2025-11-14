@@ -36,6 +36,12 @@ export const Help: FC<HelpProps> = ({ command }) => {
       <Box marginLeft={2} flexDirection="column">
         <Text>
           <Text color="green" bold>
+            add [parent] [title]{" "}
+          </Text>
+          <Text color="gray">Create new artifacts with AI wizard</Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
             start &lt;artifact-id&gt;{" "}
           </Text>
           <Text color="gray">Start work on an artifact</Text>
@@ -110,6 +116,153 @@ export const Help: FC<HelpProps> = ({ command }) => {
 
 function getCommandHelp(command: string): JSX.Element {
   switch (command.toLowerCase()) {
+    case "add":
+      return (
+        <Box flexDirection="column">
+          <Text color="cyan" bold>
+            kb add - Create new artifacts
+          </Text>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Usage:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb add [parent] [title] [options]</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Description:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              Creates new artifacts using an AI-assisted wizard or direct
+            </Text>
+            <Text>
+              mode. Enforces Kodebase hierarchy rules (initiative → milestone →
+              issue)
+            </Text>
+            <Text>and guides you through batch creation until valid.</Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Modes:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text color="cyan" bold>
+              Wizard Mode (Interactive)
+            </Text>
+            <Box marginLeft={2} flexDirection="column">
+              <Text>• Launch AI-assisted wizard for step-by-step creation</Text>
+              <Text>• Natural language objective input</Text>
+              <Text>• AI generates structured artifact content</Text>
+              <Text>• Preview and confirm before saving</Text>
+            </Box>
+            <Text> </Text>
+            <Text color="cyan" bold>
+              Direct Mode (Quick)
+            </Text>
+            <Box marginLeft={2} flexDirection="column">
+              <Text>
+                • Quickly create artifacts with title and default values
+              </Text>
+              <Text>• AI prompt generated for further editing</Text>
+              <Text>• Best for rapid scaffolding</Text>
+            </Box>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Options:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="cyan">--submit </Text>
+              <Text color="gray">
+                Run validation and create PR after creation
+              </Text>
+            </Text>
+            <Text>
+              <Text color="cyan">--verbose </Text>
+              <Text color="gray">Show detailed progress and debug info</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Examples:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text color="gray" dimColor>
+              Wizard Mode:
+            </Text>
+            <Box marginLeft={2} flexDirection="column">
+              <Text>
+                <Text color="green">$ kb add</Text>
+                <Text color="gray"> - Launch wizard for initiative</Text>
+              </Text>
+              <Text>
+                <Text color="green">$ kb add A</Text>
+                <Text color="gray"> - Launch wizard for milestone under A</Text>
+              </Text>
+              <Text>
+                <Text color="green">$ kb add A.1</Text>
+                <Text color="gray"> - Launch wizard for issue under A.1</Text>
+              </Text>
+            </Box>
+            <Text> </Text>
+            <Text color="gray" dimColor>
+              Direct Mode:
+            </Text>
+            <Box marginLeft={2} flexDirection="column">
+              <Text>
+                <Text color="green">$ kb add "OAuth Integration"</Text>
+                <Text color="gray"> - Create initiative</Text>
+              </Text>
+              <Text>
+                <Text color="green">$ kb add A "Payment System"</Text>
+                <Text color="gray"> - Create milestone under A</Text>
+              </Text>
+              <Text>
+                <Text color="green">$ kb add A.1 "Stripe setup"</Text>
+                <Text color="gray"> - Create issue under A.1</Text>
+              </Text>
+            </Box>
+            <Text> </Text>
+            <Text color="gray" dimColor>
+              With submission:
+            </Text>
+            <Box marginLeft={2} flexDirection="column">
+              <Text>
+                <Text color="green">$ kb add --submit</Text>
+                <Text color="gray"> - Create artifacts and submit PR</Text>
+              </Text>
+            </Box>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Hierarchy Rules:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              • Initiatives must have ≥1 milestone (each with ≥1 issue)
+            </Text>
+            <Text>• Milestones must have ≥1 issue</Text>
+            <Text>• Issues are leaf nodes (no children)</Text>
+            <Text>• Batch creation loop enforces rules until complete</Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="gray">Related: kb start &lt;id&gt;, kb status</Text>
+        </Box>
+      );
+
     case "start":
       return (
         <Box flexDirection="column">

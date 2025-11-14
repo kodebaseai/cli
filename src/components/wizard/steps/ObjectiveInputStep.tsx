@@ -7,7 +7,7 @@
  * Based on spec: .kodebase/docs/specs/cli/artifact-wizard.md (lines 507-583)
  */
 
-import { Box, Newline, Text } from "ink";
+import { Box, Newline, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import type { FC } from "react";
 import { useState } from "react";
@@ -24,6 +24,7 @@ export const ObjectiveInputStep: FC<StepComponentProps> = ({
   state,
   onUpdate,
   onNext,
+  onBack,
 }) => {
   const [objectiveValue, setObjectiveValue] = useState(state.objective);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -48,7 +49,7 @@ export const ObjectiveInputStep: FC<StepComponentProps> = ({
     setShowConfirm(true);
   };
 
-  const _handleConfirmAI = (useAI: boolean) => {
+  const handleConfirmAI = (useAI: boolean) => {
     if (useAI) {
       onNext();
     } else {
@@ -65,6 +66,26 @@ export const ObjectiveInputStep: FC<StepComponentProps> = ({
     }
   };
 
+  // Handle keyboard input for confirmation screen
+  useInput(
+    (input, key) => {
+      if (showConfirm) {
+        // During confirmation, handle Y/N/B keys
+        if (input === "y" || input === "Y" || key.return) {
+          handleConfirmAI(true);
+        } else if (input === "b" || input === "B") {
+          // Go back to previous step
+          if (onBack) {
+            onBack();
+          }
+        } else if (input === "n" || input === "N") {
+          handleConfirmAI(false);
+        }
+      }
+    },
+    { isActive: showConfirm },
+  );
+
   const artifactTypeLabel = state.artifactType
     ? state.artifactType.charAt(0).toUpperCase() + state.artifactType.slice(1)
     : "";
@@ -74,7 +95,7 @@ export const ObjectiveInputStep: FC<StepComponentProps> = ({
     return (
       <Box flexDirection="column">
         <Text bold color="cyan">
-          Step 2: Objective Input
+          Confirm AI Assistance
         </Text>
         <Text color="gray">
           Creating: {artifactTypeLabel}
@@ -116,10 +137,10 @@ export const ObjectiveInputStep: FC<StepComponentProps> = ({
   return (
     <Box flexDirection="column">
       <Text bold color="cyan">
-        Step 2: Objective Input
+        Describe Your Objective
       </Text>
       <Text color="gray">
-        Creating: {artifactTypeLabel}
+        Creating {artifactTypeLabel}
         {state.parentId && ` under ${state.parentId}`}
       </Text>
       <Newline />

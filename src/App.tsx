@@ -7,6 +7,7 @@
 import type { TArtifactEvent } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
+import { Add } from "./commands/Add.js";
 import { Context } from "./commands/Context.js";
 import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
@@ -39,6 +40,16 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
     // Check if user wants help for a specific command (e.g., kb help start)
     const helpCommand = commandArgs.find((arg) => !arg.startsWith("--"));
     return <Help command={helpCommand} />;
+  }
+
+  // Handle add command
+  if (command === "add") {
+    // Parse flags
+    const submit = commandArgs.includes("--submit");
+
+    // Note: All arguments (excluding flags) are passed to Add component
+    // The Add component handles mode detection (wizard vs direct)
+    return <Add args={commandArgs} submit={submit} verbose={verbose} />;
   }
 
   // Handle start command
