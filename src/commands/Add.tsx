@@ -39,7 +39,12 @@ import {
   IdAllocationService,
   ScaffoldingService,
 } from "@kodebase/artifacts";
-import type { TAnyArtifact } from "@kodebase/core";
+import {
+  CArtifact,
+  CEstimationSize,
+  CPriority,
+  type TAnyArtifact,
+} from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -374,9 +379,9 @@ export const Add: FC<AddCommandProps> = ({ args, verbose, submit }) => {
 
           // Allocate ID
           let allocatedId: string;
-          if (artifactType === "initiative") {
+          if (artifactType === CArtifact.INITIATIVE) {
             allocatedId = await idAllocationService.allocateNextInitiativeId();
-          } else if (artifactType === "milestone") {
+          } else if (artifactType === CArtifact.MILESTONE) {
             if (!parentId) {
               throw new Error("Parent ID is required for milestones");
             }
@@ -524,14 +529,14 @@ export const Add: FC<AddCommandProps> = ({ args, verbose, submit }) => {
             artifact: TAnyArtifact;
             slug: string;
           };
-          if (artifactType === "initiative") {
+          if (artifactType === CArtifact.INITIATIVE) {
             scaffoldResult = await scaffoldingService.scaffoldInitiative(
               title,
               {
-                priority: "medium",
+                priority: CPriority.MEDIUM,
               },
             );
-          } else if (artifactType === "milestone") {
+          } else if (artifactType === CArtifact.MILESTONE) {
             if (!parentId) {
               throw new Error("Parent ID is required for milestones");
             }
@@ -539,8 +544,8 @@ export const Add: FC<AddCommandProps> = ({ args, verbose, submit }) => {
               parentId,
               title,
               {
-                priority: "medium",
-                estimation: "M",
+                priority: CPriority.MEDIUM,
+                estimation: CEstimationSize.M,
                 summary: title,
               },
             );
@@ -553,8 +558,8 @@ export const Add: FC<AddCommandProps> = ({ args, verbose, submit }) => {
               parentId,
               title,
               {
-                priority: "medium",
-                estimation: "M",
+                priority: CPriority.MEDIUM,
+                estimation: CEstimationSize.M,
                 summary: title,
               },
             );

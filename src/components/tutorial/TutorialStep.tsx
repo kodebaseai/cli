@@ -1,3 +1,4 @@
+import { CArtifactEvent } from "@kodebase/core";
 import { Box, Newline, Text, useInput } from "ink";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
@@ -102,7 +103,7 @@ export const TutorialStep: FC<TutorialStepProps> = ({
         } else {
           setStatusMessage(`✅ Created ${step.split("-")[1]} successfully!`);
         }
-        setStepStatus("completed");
+        setStepStatus(CArtifactEvent.COMPLETED);
       } else {
         setStepStatus("error");
         if (step === "git-integration") {
@@ -290,7 +291,7 @@ export const TutorialStep: FC<TutorialStepProps> = ({
               <Text color="yellow">🔧 Creating initiative...</Text>
             )}
 
-            {stepStatus === "completed" && (
+            {stepStatus === CArtifactEvent.COMPLETED && (
               <>
                 <Text>
                   ✅ Your first Initiative is ready! It's stored in
@@ -360,7 +361,7 @@ export const TutorialStep: FC<TutorialStepProps> = ({
               <Text color="yellow">🔧 Creating milestone...</Text>
             )}
 
-            {stepStatus === "completed" && (
+            {stepStatus === CArtifactEvent.COMPLETED && (
               <>
                 <Text>🎉 Your milestone is ready!</Text>
                 <Newline />
@@ -427,7 +428,7 @@ export const TutorialStep: FC<TutorialStepProps> = ({
               <Text color="yellow">🔧 Creating issue...</Text>
             )}
 
-            {stepStatus === "completed" && (
+            {stepStatus === CArtifactEvent.COMPLETED && (
               <>
                 <Text>🎉 Complete project structure created!</Text>
                 <Newline />
@@ -503,7 +504,7 @@ export const TutorialStep: FC<TutorialStepProps> = ({
               </Text>
             )}
 
-            {stepStatus === "completed" && (
+            {stepStatus === CArtifactEvent.COMPLETED && (
               <>
                 <Text bold>Key Commands You Just Learned:</Text>
                 <Text color="green">kodebase start {ISSUE_ID}</Text>
@@ -697,7 +698,7 @@ export const TutorialStep: FC<TutorialStepProps> = ({
         const action = step === "git-integration" ? "demonstrate" : "create";
         return `Press Enter or 'c' to ${action} • ${stepInfo.canGoBack ? "Press 'b' to go Back" : ""}`;
       }
-      if (stepStatus === "completed") {
+      if (stepStatus === CArtifactEvent.COMPLETED) {
         return `Press Enter or 'n' for Next${stepInfo.canGoBack ? " • Press 'b' to go Back" : ""}`;
       }
       if (stepStatus === "creating") {

@@ -9,7 +9,12 @@
  */
 
 import { QueryService } from "@kodebase/artifacts";
-import type { TAnyArtifact, TArtifactType } from "@kodebase/core";
+import {
+  CArtifact,
+  CArtifactEvent,
+  type TAnyArtifact,
+  type TArtifactType,
+} from "@kodebase/core";
 import { Box, Newline, Text } from "ink";
 import SelectInput from "ink-select-input";
 import type { FC } from "react";
@@ -28,24 +33,24 @@ interface TypeOption {
  */
 function getArtifactTypeFromId(id: string): TArtifactType {
   const segments = id.split(".");
-  if (segments.length === 1) return "initiative";
-  if (segments.length === 2) return "milestone";
-  return "issue";
+  if (segments.length === 1) return CArtifact.INITIATIVE;
+  if (segments.length === 2) return CArtifact.MILESTONE;
+  return CArtifact.ISSUE;
 }
 
 const TYPE_OPTIONS: TypeOption[] = [
   {
-    value: "initiative",
+    value: CArtifact.INITIATIVE,
     label: "Initiative",
     description: "Top-level epic or theme",
   },
   {
-    value: "milestone",
+    value: CArtifact.MILESTONE,
     label: "Milestone",
     description: "Major deliverable with issues",
   },
   {
-    value: "issue",
+    value: CArtifact.ISSUE,
     label: "Issue",
     description: "Atomic unit of work",
   },
@@ -70,7 +75,7 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
   // Load parent options when type is selected and requires parent
   useEffect(() => {
     const loadParents = async () => {
-      if (!state.artifactType || state.artifactType === "initiative") {
+      if (!state.artifactType || state.artifactType === CArtifact.INITIATIVE) {
         setShowParentSelect(false);
         return;
       }
@@ -90,16 +95,16 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
 
             // Milestones need initiative parents
             if (
-              state.artifactType === "milestone" &&
-              artifactType !== "initiative"
+              state.artifactType === CArtifact.MILESTONE &&
+              artifactType !== CArtifact.INITIATIVE
             ) {
               return false;
             }
 
             // Issues need milestone parents
             if (
-              state.artifactType === "issue" &&
-              artifactType !== "milestone"
+              state.artifactType === CArtifact.ISSUE &&
+              artifactType !== CArtifact.MILESTONE
             ) {
               return false;
             }
@@ -108,8 +113,8 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
             const events = artifact.metadata.events || [];
             const latestEvent = events[events.length - 1];
             if (
-              latestEvent?.event === "completed" ||
-              latestEvent?.event === "cancelled"
+              latestEvent?.event === CArtifactEvent.COMPLETED ||
+              latestEvent?.event === CArtifactEvent.CANCELLED
             ) {
               return false;
             }
@@ -151,7 +156,7 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
     });
 
     // If initiative, proceed immediately (no parent needed)
-    if (item.value.value === "initiative") {
+    if (item.value.value === CArtifact.INITIATIVE) {
       onNext();
     }
   };
@@ -240,7 +245,9 @@ export const TypeParentSelectionStep: FC<StepComponentProps> = ({
 
     if (parentOptions.length === 0) {
       const parentType =
-        state.artifactType === "milestone" ? "initiative" : "milestone";
+        state.artifactType === CArtifact.MILESTONE
+          ? CArtifact.INITIATIVE
+          : CArtifact.MILESTONE;
       return (
         <Box flexDirection="column">
           <Text bold color="cyan">

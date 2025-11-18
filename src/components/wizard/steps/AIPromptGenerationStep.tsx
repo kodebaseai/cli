@@ -13,7 +13,12 @@ import {
   IdAllocationService,
   ScaffoldingService,
 } from "@kodebase/artifacts";
-import type { TAnyArtifact } from "@kodebase/core";
+import {
+  CArtifact,
+  CEstimationSize,
+  CPriority,
+  type TAnyArtifact,
+} from "@kodebase/core";
 import clipboard from "clipboardy";
 import { Box, Newline, Text, useInput } from "ink";
 import Spinner from "ink-spinner";
@@ -118,19 +123,23 @@ export const AIPromptGenerationStep: FC<StepComponentProps> = ({
             idAllocationService,
           );
 
-          if (state.artifactType === "initiative") {
+          if (state.artifactType === CArtifact.INITIATIVE) {
             scaffoldResult = await scaffoldingService.scaffoldInitiative(
               state.objective,
-              { priority: "medium" },
+              { priority: CPriority.MEDIUM },
             );
-          } else if (state.artifactType === "milestone") {
+          } else if (state.artifactType === CArtifact.MILESTONE) {
             if (!state.parentId) {
               throw new Error("Parent ID required for milestone");
             }
             scaffoldResult = await scaffoldingService.scaffoldMilestone(
               state.parentId,
               state.objective,
-              { priority: "medium", estimation: "M", summary: state.objective },
+              {
+                priority: CPriority.MEDIUM,
+                estimation: CEstimationSize.M,
+                summary: state.objective,
+              },
             );
           } else {
             // issue
@@ -140,7 +149,11 @@ export const AIPromptGenerationStep: FC<StepComponentProps> = ({
             scaffoldResult = await scaffoldingService.scaffoldIssue(
               state.parentId,
               state.objective,
-              { priority: "medium", estimation: "M", summary: state.objective },
+              {
+                priority: CPriority.MEDIUM,
+                estimation: CEstimationSize.M,
+                summary: state.objective,
+              },
             );
           }
 

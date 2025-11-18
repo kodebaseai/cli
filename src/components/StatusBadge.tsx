@@ -1,3 +1,4 @@
+import { CArtifactEvent } from "@kodebase/core";
 import { Text } from "ink";
 import type { FC } from "react";
 
@@ -11,21 +12,21 @@ interface StatusBadgeProps {
 export const StatusBadge: FC<StatusBadgeProps> = ({ status }) => {
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case "ready":
+      case CArtifactEvent.READY:
         return "green";
-      case "in_progress":
+      case CArtifactEvent.IN_PROGRESS:
         return "yellow";
-      case "in_review":
+      case CArtifactEvent.IN_REVIEW:
         return "blue";
-      case "completed":
+      case CArtifactEvent.COMPLETED:
         return "green";
-      case "blocked":
+      case CArtifactEvent.BLOCKED:
         return "red";
-      case "cancelled":
+      case CArtifactEvent.CANCELLED:
         return "gray";
-      case "archived":
+      case CArtifactEvent.ARCHIVED:
         return "gray";
-      case "draft":
+      case CArtifactEvent.DRAFT:
         return "gray";
       default:
         return "white";
@@ -34,9 +35,9 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status }) => {
 
   const getStatusLabel = (status: string): string => {
     switch (status) {
-      case "in_progress":
+      case CArtifactEvent.IN_PROGRESS:
         return "In Progress";
-      case "in_review":
+      case CArtifactEvent.IN_REVIEW:
         return "In Review";
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);

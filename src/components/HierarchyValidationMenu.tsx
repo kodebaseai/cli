@@ -8,6 +8,7 @@
  */
 
 import { ArtifactService } from "@kodebase/artifacts";
+import { CArtifact } from "@kodebase/core";
 import { Box, Newline, Text } from "ink";
 import SelectInput from "ink-select-input";
 import type { FC } from "react";
@@ -66,10 +67,10 @@ export const HierarchyValidationMenu: FC<HierarchyValidationMenuProps> = ({
             const parts = id.split(".");
             const type =
               parts.length === 1
-                ? "initiative"
+                ? CArtifact.INITIATIVE
                 : parts.length === 2
-                  ? "milestone"
-                  : "issue";
+                  ? CArtifact.MILESTONE
+                  : CArtifact.ISSUE;
 
             return {
               id,
@@ -81,7 +82,7 @@ export const HierarchyValidationMenu: FC<HierarchyValidationMenuProps> = ({
             return {
               id,
               title: `Artifact ${id}`,
-              type: "issue" as const,
+              type: CArtifact.ISSUE,
             };
           }
         }),

@@ -9,6 +9,7 @@
  */
 
 import path from "node:path";
+import { CArtifact, type TArtifactType } from "@kodebase/core";
 
 export interface ParsedArtifact {
   /** Artifact ID (e.g., "F", "F.1", "F.1.1") */
@@ -16,7 +17,7 @@ export interface ParsedArtifact {
   /** Slug from filename or directory */
   slug: string;
   /** Artifact type based on ID structure */
-  type: "initiative" | "milestone" | "issue";
+  type: TArtifactType;
 }
 
 /**
@@ -49,16 +50,16 @@ export function parseArtifactFromPath(filePath: string): ParsedArtifact {
 
   // Determine artifact type from ID to know where to look for slug
   const idSegments = id.split(".");
-  const type: "initiative" | "milestone" | "issue" =
+  const type: TArtifactType =
     idSegments.length === 1
-      ? "initiative"
+      ? CArtifact.INITIATIVE
       : idSegments.length === 2
-        ? "milestone"
-        : "issue";
+        ? CArtifact.MILESTONE
+        : CArtifact.ISSUE;
 
   // Handle slug extraction
   let slug: string;
-  if (type === "issue") {
+  if (type === CArtifact.ISSUE) {
     // For issues, slug comes from the filename
     if (fileSlug) {
       slug = fileSlug;

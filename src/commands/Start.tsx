@@ -31,6 +31,7 @@ import {
 import { loadConfig } from "@kodebase/config";
 import {
   CArtifactEvent,
+  CEventTrigger,
   type TArtifactEvent,
   type TEvent,
 } from "@kodebase/core";
@@ -187,7 +188,7 @@ export const Start: FC<StartCommandProps> = ({
           event: CArtifactEvent.IN_PROGRESS,
           timestamp: formatTimestamp(),
           actor: artifact.metadata.assignee || "Unknown",
-          trigger: "branch_created",
+          trigger: CEventTrigger.BRANCH_CREATED,
         };
         await artifactService.appendEvent({
           id: artifactId,
@@ -450,10 +451,10 @@ async function handleSubmit(
   // Update artifact status to in_review
   const artifact = await artifactService.getArtifact({ id: artifactId });
   const inReviewEvent: TEvent = {
-    event: "in_review" as TArtifactEvent,
+    event: CArtifactEvent.IN_REVIEW as TArtifactEvent,
     timestamp: formatTimestamp(),
     actor: artifact.metadata.assignee || "Unknown",
-    trigger: "pr_ready",
+    trigger: CEventTrigger.PR_READY,
   };
   await artifactService.appendEvent({
     id: artifactId,

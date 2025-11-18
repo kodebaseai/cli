@@ -5,11 +5,13 @@
  * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md
  */
 
-import type {
-  TAnyArtifact,
-  TArtifactType,
-  TEstimationSize,
-  TPriority,
+import {
+  CEstimationSize,
+  CPriority,
+  type TAnyArtifact,
+  type TArtifactType,
+  type TEstimationSize,
+  type TPriority,
 } from "@kodebase/core";
 
 /**
@@ -222,17 +224,17 @@ export const PRIORITY_OPTIONS: Array<{
   description: string;
 }> = [
   {
-    value: "critical",
+    value: CPriority.CRITICAL,
     label: "Critical",
     description: "Urgent, blocks other work",
   },
   {
-    value: "high",
+    value: CPriority.HIGH,
     label: "High",
     description: "Important, should be done soon",
   },
-  { value: "medium", label: "Medium", description: "Normal priority" },
-  { value: "low", label: "Low", description: "Nice to have, can wait" },
+  { value: CPriority.MEDIUM, label: "Medium", description: "Normal priority" },
+  { value: CPriority.LOW, label: "Low", description: "Nice to have, can wait" },
 ];
 
 /**
@@ -243,9 +245,29 @@ export const ESTIMATION_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: "XS", label: "XS", description: "< 1 day" },
-  { value: "S", label: "S", description: "1-3 days" },
-  { value: "M", label: "M", description: "3-7 days" },
-  { value: "L", label: "L", description: "1-2 weeks" },
-  { value: "XL", label: "XL", description: "2+ weeks" },
+  {
+    value: CEstimationSize.XS,
+    label: CEstimationSize.XS,
+    description: "< 1 day",
+  },
+  {
+    value: CEstimationSize.S,
+    label: CEstimationSize.S,
+    description: "1-3 days",
+  },
+  {
+    value: CEstimationSize.M,
+    label: CEstimationSize.M,
+    description: "3-7 days",
+  },
+  {
+    value: CEstimationSize.L,
+    label: CEstimationSize.L,
+    description: "1-2 weeks",
+  },
+  {
+    value: CEstimationSize.XL,
+    label: CEstimationSize.XL,
+    description: "2+ weeks",
+  },
 ];

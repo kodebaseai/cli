@@ -1,3 +1,4 @@
+import type { TArtifactType } from "@kodebase/core";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import React, { useCallback, useMemo, useState } from "react";
@@ -11,7 +12,7 @@ import { StatusBadge } from "../StatusBadge.js";
 export interface ArtifactPickerProps {
   onSelect: (artifactId: string) => void;
   onCancel: () => void;
-  filterType?: "initiative" | "milestone" | "issue";
+  filterType?: TArtifactType;
   filterStatus?: string[];
   placeholder?: string;
   maxVisible?: number;

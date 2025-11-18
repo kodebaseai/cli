@@ -1,3 +1,4 @@
+import { CArtifactEvent, CEventTrigger } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
 
@@ -79,25 +80,25 @@ export const EventTimeline: FC<EventTimelineProps> = ({
 
   const getEventIcon = (event: string): string => {
     switch (event) {
-      case "draft":
-      case "artifact_created":
+      case CArtifactEvent.DRAFT:
+      case CEventTrigger.ARTIFACT_CREATED:
         return "◌";
-      case "ready":
+      case CArtifactEvent.READY:
         return "○";
-      case "in_progress":
-      case "branch_created":
+      case CArtifactEvent.IN_PROGRESS:
+      case CEventTrigger.BRANCH_CREATED:
         return "◎";
-      case "in_review":
-      case "pr_ready":
+      case CArtifactEvent.IN_REVIEW:
+      case CEventTrigger.PR_READY:
         return "♾";
-      case "completed":
-      case "pr_merged":
+      case CArtifactEvent.COMPLETED:
+      case CEventTrigger.PR_MERGED:
         return "●";
-      case "blocked":
+      case CArtifactEvent.BLOCKED:
         return "◇";
-      case "cancelled":
+      case CArtifactEvent.CANCELLED:
         return "◈";
-      case "archived":
+      case CArtifactEvent.ARCHIVED:
         return "◆";
       default:
         return "•";
@@ -106,22 +107,21 @@ export const EventTimeline: FC<EventTimelineProps> = ({
 
   const getEventColor = (event: string): string => {
     switch (event) {
-      case "draft":
-      case "artifact_created":
+      case CArtifactEvent.DRAFT:
         return "gray";
-      case "ready":
-      case "completed":
+      case CArtifactEvent.READY:
+      case CArtifactEvent.COMPLETED:
         return "green";
-      case "in_progress":
-      case "branch_created":
+      case CArtifactEvent.IN_PROGRESS:
+      case CEventTrigger.BRANCH_CREATED:
         return "yellow";
-      case "in_review":
-      case "pr_ready":
+      case CArtifactEvent.IN_REVIEW:
+      case CEventTrigger.PR_READY:
         return "blue";
-      case "blocked":
-      case "cancelled":
+      case CArtifactEvent.BLOCKED:
+      case CArtifactEvent.CANCELLED:
         return "red";
-      case "archived":
+      case CArtifactEvent.ARCHIVED:
         return "gray";
       default:
         return "white";

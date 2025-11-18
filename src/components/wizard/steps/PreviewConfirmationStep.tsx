@@ -7,10 +7,10 @@
  * Based on spec: .kodebase/docs/reference/specs/cli/artifact-wizard.md (lines 1067-1476)
  */
 
+import { CArtifact, CPriority } from "@kodebase/core";
 import { Box, Newline, Text, useInput } from "ink";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-
 import { HierarchyValidationService } from "../../../services/hierarchy-validation.js";
 import type {
   HierarchyValidationResult,
@@ -100,13 +100,13 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
     priority: string,
   ): "red" | "yellow" | "blue" | "gray" => {
     switch (priority) {
-      case "critical":
+      case CPriority.CRITICAL:
         return "red";
-      case "high":
+      case CPriority.HIGH:
         return "yellow";
-      case "medium":
+      case CPriority.MEDIUM:
         return "blue";
-      case "low":
+      case CPriority.LOW:
         return "gray";
       default:
         return "gray";
@@ -116,11 +116,11 @@ export const PreviewConfirmationStep: FC<StepComponentProps> = ({
   // Get artifact type description
   const getTypeDescription = (type: string): string => {
     switch (type) {
-      case "initiative":
+      case CArtifact.INITIATIVE:
         return "High-level goal or project";
-      case "milestone":
+      case CArtifact.MILESTONE:
         return "Major deliverable within an initiative";
-      case "issue":
+      case CArtifact.ISSUE:
         return "Specific work item or task";
       default:
         return type;

@@ -12,7 +12,7 @@ import {
   IdAllocationService,
   ScaffoldingService,
 } from "@kodebase/artifacts";
-import type { TAnyArtifact } from "@kodebase/core";
+import { CEstimationSize, CPriority, type TAnyArtifact } from "@kodebase/core";
 
 export interface TutorialArtifactResult {
   success: boolean;
@@ -61,8 +61,8 @@ export async function createTutorialInitiative(
         "Practice CLI commands",
       ],
       assignee: "Tutorial User (tutorial@example.com)",
-      priority: "medium",
-      estimation: "M",
+      priority: CPriority.MEDIUM,
+      estimation: CEstimationSize.M,
     });
 
     // Create initiative directory with X ID
@@ -122,8 +122,8 @@ export async function createTutorialMilestone(
           "Practice CLI milestone commands",
         ],
         assignee: "Tutorial User (tutorial@example.com)",
-        priority: "medium",
-        estimation: "M",
+        priority: CPriority.MEDIUM,
+        estimation: CEstimationSize.M,
       },
     );
 
@@ -189,8 +189,8 @@ export async function createTutorialIssue(
           "Experience complete artifact hierarchy",
         ],
         assignee: "Tutorial User (tutorial@example.com)",
-        priority: "medium",
-        estimation: "M",
+        priority: CPriority.MEDIUM,
+        estimation: CEstimationSize.M,
       },
     );
 

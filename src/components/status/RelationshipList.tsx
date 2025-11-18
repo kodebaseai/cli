@@ -1,3 +1,4 @@
+import { CArtifactEvent } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
 
@@ -17,10 +18,11 @@ export const RelationshipList: FC<RelationshipListProps> = ({
   currentStatus,
 }) => {
   // Determine if dependencies are resolved based on status
-  const isBlocked = currentStatus === "blocked";
-  const isCompleted = currentStatus === "completed";
+  const isBlocked = currentStatus === CArtifactEvent.BLOCKED;
+  const isCompleted = currentStatus === CArtifactEvent.COMPLETED;
   const isInProgress =
-    currentStatus === "in_progress" || currentStatus === "in_review";
+    currentStatus === CArtifactEvent.IN_PROGRESS ||
+    currentStatus === CArtifactEvent.IN_REVIEW;
   const dependenciesResolved = isCompleted || isInProgress;
 
   return (

@@ -10,6 +10,7 @@ import {
   type BlockingReason,
   ReadinessService,
 } from "@kodebase/artifacts";
+import { CArtifact, type TArtifactType } from "@kodebase/core";
 
 export interface ParentValidationResult {
   /** Whether the parent is valid */
@@ -108,11 +109,9 @@ export async function validateParent(
  * @param parentId - The artifact ID of the parent (undefined for initiative)
  * @returns Artifact type
  */
-export function inferArtifactType(
-  parentId: string | undefined,
-): "initiative" | "milestone" | "issue" {
+export function inferArtifactType(parentId: string | undefined): TArtifactType {
   if (!parentId) {
-    return "initiative";
+    return CArtifact.INITIATIVE;
   }
 
   // Count dots to determine depth
@@ -122,11 +121,11 @@ export function inferArtifactType(
   const depth = parentId.split(".").length;
 
   if (depth === 1) {
-    return "milestone";
+    return CArtifact.MILESTONE;
   }
 
   if (depth === 2) {
-    return "issue";
+    return CArtifact.ISSUE;
   }
 
   throw new Error(

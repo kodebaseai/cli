@@ -10,7 +10,7 @@
  */
 
 import { QueryService } from "@kodebase/artifacts";
-import type { TArtifactType } from "@kodebase/core";
+import { CArtifact, type TArtifactType } from "@kodebase/core";
 import type {
   BatchCreationContext,
   HierarchyValidationResult,
@@ -40,17 +40,17 @@ export class HierarchyValidationService {
     context?: BatchCreationContext,
   ): Promise<HierarchyValidationResult> {
     // Issue: Always valid (no children required)
-    if (artifactType === "issue") {
+    if (artifactType === CArtifact.ISSUE) {
       return this.handleIssueValidation(artifactId, context);
     }
 
     // Milestone: Requires ≥1 issue
-    if (artifactType === "milestone") {
+    if (artifactType === CArtifact.MILESTONE) {
       return this.handleMilestoneValidation(artifactId, context);
     }
 
     // Initiative: Requires ≥1 milestone (each with ≥1 issue)
-    if (artifactType === "initiative") {
+    if (artifactType === CArtifact.INITIATIVE) {
       return this.handleInitiativeValidation(artifactId, context);
     }
 
@@ -84,14 +84,14 @@ export class HierarchyValidationService {
             label: `Add FIRST issue to ${updatedIncompleteMilestones[0]}`,
             type: "add_issue",
             targetParent: updatedIncompleteMilestones[0],
-            targetType: "issue",
+            targetType: CArtifact.ISSUE,
             isRequired: true,
           },
           {
             label: `Add another issue to ${parentId}`,
             type: "add_issue",
             targetParent: parentId,
-            targetType: "issue",
+            targetType: CArtifact.ISSUE,
           },
         ];
 
@@ -113,7 +113,7 @@ export class HierarchyValidationService {
           label: `Add another issue to ${parentId}`,
           type: "add_issue",
           targetParent: parentId,
-          targetType: "issue",
+          targetType: CArtifact.ISSUE,
         },
       ];
 
@@ -134,7 +134,7 @@ export class HierarchyValidationService {
       actions: [{ label: "Finish", type: "finish" }],
       context: context || {
         rootArtifactId: parentId,
-        rootArtifactType: "milestone",
+        rootArtifactType: CArtifact.MILESTONE,
         createdArtifacts: [artifactId],
         incompleteMilestones: [],
       },
@@ -158,14 +158,14 @@ export class HierarchyValidationService {
           label: `Add FIRST issue to ${artifactId}`,
           type: "add_issue",
           targetParent: artifactId,
-          targetType: "issue",
+          targetType: CArtifact.ISSUE,
           isRequired: true,
         },
       ];
 
       const newContext: BatchCreationContext = context || {
         rootArtifactId: artifactId,
-        rootArtifactType: "milestone",
+        rootArtifactType: CArtifact.MILESTONE,
         createdArtifacts: [artifactId],
         incompleteMilestones: [artifactId],
       };
@@ -188,12 +188,12 @@ export class HierarchyValidationService {
           label: `Add another issue to ${artifactId}`,
           type: "add_issue",
           targetParent: artifactId,
-          targetType: "issue",
+          targetType: CArtifact.ISSUE,
         },
       ],
       context: context || {
         rootArtifactId: artifactId,
-        rootArtifactType: "milestone",
+        rootArtifactType: CArtifact.MILESTONE,
         createdArtifacts: [artifactId, ...issues],
         incompleteMilestones: [],
       },
@@ -217,14 +217,14 @@ export class HierarchyValidationService {
           label: `Add FIRST milestone to ${artifactId}`,
           type: "add_milestone",
           targetParent: artifactId,
-          targetType: "milestone",
+          targetType: CArtifact.MILESTONE,
           isRequired: true,
         },
       ];
 
       const newContext: BatchCreationContext = {
         rootArtifactId: artifactId,
-        rootArtifactType: "initiative",
+        rootArtifactType: CArtifact.INITIATIVE,
         createdArtifacts: [artifactId],
         incompleteMilestones: [],
       };
@@ -253,20 +253,20 @@ export class HierarchyValidationService {
           label: `Add FIRST issue to ${incompleteMilestones[0]}`,
           type: "add_issue",
           targetParent: incompleteMilestones[0],
-          targetType: "issue",
+          targetType: CArtifact.ISSUE,
           isRequired: true,
         },
         {
           label: `Add another milestone to ${artifactId}`,
           type: "add_milestone",
           targetParent: artifactId,
-          targetType: "milestone",
+          targetType: CArtifact.MILESTONE,
         },
       ];
 
       const newContext: BatchCreationContext = context || {
         rootArtifactId: artifactId,
-        rootArtifactType: "initiative",
+        rootArtifactType: CArtifact.INITIATIVE,
         createdArtifacts: [artifactId, ...milestones],
         incompleteMilestones,
       };
@@ -289,7 +289,7 @@ export class HierarchyValidationService {
         label: `Add another milestone to ${artifactId}`,
         type: "add_milestone",
         targetParent: artifactId,
-        targetType: "milestone",
+        targetType: CArtifact.MILESTONE,
       },
     ];
 
@@ -299,7 +299,7 @@ export class HierarchyValidationService {
       actions,
       context: context || {
         rootArtifactId: artifactId,
-        rootArtifactType: "initiative",
+        rootArtifactType: CArtifact.INITIATIVE,
         createdArtifacts: [artifactId, ...milestones],
         incompleteMilestones: [],
       },

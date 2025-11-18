@@ -5,13 +5,14 @@
  * Shows parent-child relationships and artifact titles.
  */
 
+import { CArtifact, type TArtifactType } from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
 
 export interface TreeArtifact {
   id: string;
   title: string;
-  type: "initiative" | "milestone" | "issue";
+  type: TArtifactType;
 }
 
 export interface ArtifactTreeViewProps {
@@ -63,11 +64,11 @@ const ArtifactNode: FC<{
   // Get type icon
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "initiative":
+      case CArtifact.INITIATIVE:
         return "📋";
-      case "milestone":
+      case CArtifact.MILESTONE:
         return "🎯";
-      case "issue":
+      case CArtifact.ISSUE:
         return "📌";
       default:
         return "•";
@@ -77,11 +78,11 @@ const ArtifactNode: FC<{
   // Get type color
   const getTypeColor = (type: string): "cyan" | "yellow" | "green" => {
     switch (type) {
-      case "initiative":
+      case CArtifact.INITIATIVE:
         return "cyan";
-      case "milestone":
+      case CArtifact.MILESTONE:
         return "yellow";
-      case "issue":
+      case CArtifact.ISSUE:
         return "green";
       default:
         return "cyan";

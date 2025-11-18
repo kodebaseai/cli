@@ -10,7 +10,11 @@
 import path from "node:path";
 
 import { ArtifactService, QueryService } from "@kodebase/artifacts";
-import type { TAnyArtifact, TArtifactType } from "@kodebase/core";
+import {
+  CArtifact,
+  type TAnyArtifact,
+  type TArtifactType,
+} from "@kodebase/core";
 import yaml from "yaml";
 
 import type { AIEnvironment } from "../types.js";
@@ -259,12 +263,12 @@ metadata:
   title: string (3-100 chars, required)
   artifact_type: "${artifactType}"
   priority: critical | high | medium | low (required)
-  ${artifactType !== "initiative" ? "estimation: XS | S | M | L | XL (required)" : ""}
+  ${artifactType !== CArtifact.INITIATIVE ? "estimation: XS | S | M | L | XL (required)" : ""}
   created_by: string (required)
   assignee: string (optional)
   schema_version: "0.0.1" (required)
   relationships:
-    parent: "${nextId.split(".")[0]}" ${artifactType !== "initiative" ? "(required)" : ""}
+    parent: "${nextId.split(".")[0]}" ${artifactType !== CArtifact.INITIATIVE ? "(required)" : ""}
     blocks: string[] (optional)
     blocked_by: string[] (optional)
   events:

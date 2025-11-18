@@ -3,7 +3,11 @@ import {
   type QueryCriteria,
   QueryService,
 } from "@kodebase/artifacts";
-import type { TAnyArtifact, TArtifactEvent } from "@kodebase/core";
+import {
+  CArtifactEvent,
+  type TAnyArtifact,
+  type TArtifactEvent,
+} from "@kodebase/core";
 import { Box, Text } from "ink";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
@@ -81,7 +85,7 @@ export const Status: FC<StatusProps> = ({
             const currentState: TArtifactEvent =
               events.length > 0
                 ? (events[events.length - 1]?.event as TArtifactEvent)
-                : "draft";
+                : CArtifactEvent.DRAFT;
 
             return {
               id: result.id,
@@ -102,7 +106,7 @@ export const Status: FC<StatusProps> = ({
           const currentState: TArtifactEvent =
             events.length > 0
               ? (events[events.length - 1]?.event as TArtifactEvent)
-              : "draft";
+              : CArtifactEvent.DRAFT;
 
           setSingleArtifact({
             id: artifactId,
