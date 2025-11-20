@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { FC } from "react";
+import type { FC, JSX } from "react";
 
 export interface HelpProps {
   command?: string;
