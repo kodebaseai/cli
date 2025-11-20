@@ -26,6 +26,7 @@
 import {
   ArtifactService,
   type BlockingReason,
+  generateArtifactContext,
   ReadinessService,
 } from "@kodebase/artifacts";
 import { loadConfig } from "@kodebase/config";
@@ -41,7 +42,6 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { type SimpleGit, simpleGit } from "simple-git";
 import { ErrorHandler, StatusBadge } from "../components/index.js";
-import { generateArtifactContext } from "../utils/index.js";
 
 /**
  * Format timestamp for artifact events (ISO 8601 without milliseconds)
