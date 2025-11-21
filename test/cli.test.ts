@@ -63,11 +63,11 @@ describe("CLI command routing", () => {
   it("routes tutorial command", async () => {
     // Tutorial is interactive, so we just verify it starts
     // We can't test full interaction in subprocess test
-    const { stdout, stderr, output } = await runCLI(["tutorial"]);
+    const { stdout, output } = await runCLI(["tutorial"]);
 
     // In environments that support raw mode (local dev), check for welcome message
     // In environments that don't (CI), check that tutorial command was recognized
-    const isRawModeError = stderr.includes("Raw mode is not supported");
+    const isRawModeError = output.includes("Raw mode is not supported");
 
     if (isRawModeError) {
       // CI environment - just verify the command was recognized (no "unknown command" error)

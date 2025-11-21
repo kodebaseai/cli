@@ -119,7 +119,22 @@ describe("Setup command routing", () => {
 
   describe("wizard flow without preset flag", () => {
     it("starts wizard when no preset provided", async () => {
-      const { output } = await runCLI(["setup"]);
+      // Launch the wizard and kill it after a short timeout to avoid hanging
+      const subprocess = execa("node", [cliPath, "setup"], {
+        reject: false,
+        env: { FORCE_COLOR: "0" },
+        timeout: 2000, // Kill after 2 seconds
+      });
+
+      try {
+        await subprocess;
+      } catch (_error) {
+        // Timeout or kill is expected for interactive wizard
+      }
+
+      const output = stripAnsi(
+        (subprocess.stdout || "") + (subprocess.stderr || ""),
+      );
 
       // In environments that support raw mode (local dev), check for wizard
       // In environments that don't (CI), check that setup command was recognized
