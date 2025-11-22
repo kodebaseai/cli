@@ -31,8 +31,10 @@ import {
 } from "@kodebase/artifacts";
 import { loadConfig } from "@kodebase/config";
 import {
+  CArtifact,
   CArtifactEvent,
   CEventTrigger,
+  getArtifactType,
   type TArtifactEvent,
   type TEvent,
 } from "@kodebase/core";
@@ -425,7 +427,7 @@ async function handleSubmit(
   artifactId: string,
   branchName: string,
 ): Promise<string> {
-  // Load adapter and artifact service
+  const git = simpleGit();
   const config = await loadConfig(process.cwd());
   const adapter = createAdapter(config);
   const artifactService = new ArtifactService();
@@ -445,21 +447,124 @@ async function handleSubmit(
     );
   }
 
+  // Load artifact
+  const artifact = await artifactService.getArtifact({ id: artifactId });
+
+  // Validation 1: Check for implementation_notes (for ISSUE artifacts only)
+  const artifactType = getArtifactType(artifact);
+  if (artifactType === CArtifact.ISSUE) {
+    const { implementation_notes } = artifact as {
+      implementation_notes?: unknown;
+    };
+
+    if (!implementation_notes) {
+      throw new Error(
+        `Cannot submit ${artifactId}: missing implementation_notes.\n\n` +
+          "Implementation notes are required before marking the PR ready.\n" +
+          "Add implementation_notes to the artifact file with:\n" +
+          "  - result: Brief description of what was delivered\n" +
+          "  - tags: Relevant keywords (optional)\n" +
+          "  - challenges: Problems encountered and solutions (optional)\n" +
+          "  - insights: Key takeaways (optional)\n\n" +
+          "Then commit the changes and try again.",
+      );
+    }
+  }
+
+  // Validation 2: Check if all changes are pushed to remote
+  const status = await git.status();
+
+  if (status.ahead > 0) {
+    throw new Error(
+      `Cannot submit ${artifactId}: local branch is ${status.ahead} commit(s) ahead of remote.\n\n` +
+        "Push your changes first: git push",
+    );
+  }
+
+  if (status.files.length > 0) {
+    const filesList = status.files.map((f) => `  - ${f.path}`).join("\n");
+    throw new Error(
+      `Cannot submit ${artifactId}: you have uncommitted changes.\n\n` +
+        `Files with changes:\n${filesList}\n\n` +
+        "Commit and push your changes first.",
+    );
+  }
+
+  // Validation 3: Check and update PR description if needed
+  const { isDefaultPRDescription, generatePRDescription } = await import(
+    "../utils/pr-template.js"
+  );
+
+  if (isDefaultPRDescription(existingPR.body)) {
+    // Generate proper PR description from artifact
+    const description = generatePRDescription({
+      artifactId,
+      artifact: artifact as import("@kodebase/core").TIssue,
+    });
+
+    // Update PR description
+    await adapter.updatePRDescription(existingPR.number, description);
+  }
+
+  // Check if artifact already has in_review event
+  const events = artifact.metadata.events || [];
+  const existingInReviewEvent = events.find(
+    (e) =>
+      e.event === CArtifactEvent.IN_REVIEW &&
+      e.trigger === CEventTrigger.PR_READY,
+  );
+
+  if (existingInReviewEvent) {
+    // Update existing in_review event timestamp
+    const updatedEvents = events.map((e) => {
+      if (
+        e.event === CArtifactEvent.IN_REVIEW &&
+        e.trigger === CEventTrigger.PR_READY
+      ) {
+        return {
+          ...e,
+          timestamp: formatTimestamp(),
+        };
+      }
+      return e;
+    });
+
+    // Write updated events back to artifact file using updateMetadata
+    await artifactService.updateMetadata({
+      id: artifactId,
+      updates: {
+        events: updatedEvents,
+      },
+    });
+
+    // Commit the updated timestamp
+    await git.add(".kodebase/**/*");
+    await git.commit(
+      `chore(artifacts): Update ${artifactId} in_review timestamp`,
+    );
+  } else {
+    // Append new in_review event
+    const inReviewEvent: TEvent = {
+      event: CArtifactEvent.IN_REVIEW as TArtifactEvent,
+      timestamp: formatTimestamp(),
+      actor: artifact.metadata.assignee || "Unknown",
+      trigger: CEventTrigger.PR_READY,
+    };
+    await artifactService.appendEvent({
+      id: artifactId,
+      event: inReviewEvent,
+    });
+
+    // Commit the new event
+    await git.add(".kodebase/**/*");
+    await git.commit(`chore(artifacts): Mark ${artifactId} ready for review`);
+  }
+
+  // Push the event update
+  await git.push();
+
   // Mark PR as ready for review
   await adapter.markPRReady(existingPR.number);
-
-  // Update artifact status to in_review
-  const artifact = await artifactService.getArtifact({ id: artifactId });
-  const inReviewEvent: TEvent = {
-    event: CArtifactEvent.IN_REVIEW as TArtifactEvent,
-    timestamp: formatTimestamp(),
-    actor: artifact.metadata.assignee || "Unknown",
-    trigger: CEventTrigger.PR_READY,
-  };
-  await artifactService.appendEvent({
-    id: artifactId,
-    event: inReviewEvent,
-  });
 
   return existingPR.url || "(PR URL not available)";
 }
