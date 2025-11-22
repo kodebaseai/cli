@@ -72,6 +72,14 @@ export const Help: FC<HelpProps> = ({ command }) => {
         </Text>
         <Text>
           <Text color="green" bold>
+            hooks &lt;subcommand&gt;{" "}
+          </Text>
+          <Text color="gray">
+            Manage git hooks (install, uninstall, execute)
+          </Text>
+        </Text>
+        <Text>
+          <Text color="green" bold>
             tutorial{" "}
           </Text>
           <Text color="gray">Interactive tutorial for new users</Text>
@@ -751,6 +759,139 @@ function getCommandHelp(command: string): JSX.Element {
         </Box>
       );
 
+    case "hooks":
+      return (
+        <Box flexDirection="column">
+          <Text color="cyan" bold>
+            kb hooks - Manage git hooks
+          </Text>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Usage:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb hooks execute &lt;hook-type&gt;</Text>
+            </Text>
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb hooks install [--force]</Text>
+            </Text>
+            <Text>
+              <Text color="gray">$ </Text>
+              <Text>kb hooks uninstall</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Description:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              Manage git hooks that automate artifact status updates and
+              cascades.
+            </Text>
+            <Text>
+              This command is typically called automatically by git, but can
+              also
+            </Text>
+            <Text>be used manually for installation and testing.</Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Subcommands:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="cyan">execute &lt;hook-type&gt; </Text>
+              <Text color="gray">
+                - Execute a git hook (post-merge, post-checkout, post-commit)
+              </Text>
+            </Text>
+            <Text>
+              <Text color="cyan">install </Text>
+              <Text color="gray">- Install git hooks to .git/hooks/</Text>
+            </Text>
+            <Text>
+              <Text color="cyan">uninstall </Text>
+              <Text color="gray">- Remove kodebase-managed git hooks</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Hook types:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="green">post-merge </Text>
+              <Text color="gray">
+                - Runs after PR merge, cascades completion/readiness
+              </Text>
+            </Text>
+            <Text>
+              <Text color="green">post-checkout </Text>
+              <Text color="gray">
+                - Runs on branch switch, updates artifact states
+              </Text>
+            </Text>
+            <Text>
+              <Text color="green">post-commit </Text>
+              <Text color="gray">- Runs after commit (currently no-op)</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Options:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="cyan">--force </Text>
+              <Text color="gray">
+                (install only) Overwrite existing non-kodebase hooks
+              </Text>
+            </Text>
+            <Text>
+              <Text color="cyan">--verbose </Text>
+              <Text color="gray">Show detailed execution output</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="yellow" bold>
+            Examples:
+          </Text>
+          <Box marginLeft={2} flexDirection="column">
+            <Text>
+              <Text color="green">$ kb hooks install</Text>
+              <Text color="gray"> - Install all git hooks</Text>
+            </Text>
+            <Text>
+              <Text color="green">$ kb hooks install --force</Text>
+              <Text color="gray"> - Force install (overwrite existing)</Text>
+            </Text>
+            <Text>
+              <Text color="green">$ kb hooks uninstall</Text>
+              <Text color="gray"> - Remove kodebase hooks</Text>
+            </Text>
+            <Text>
+              <Text color="green">$ kb hooks execute post-merge</Text>
+              <Text color="gray"> - Manually run post-merge hook</Text>
+            </Text>
+          </Box>
+          <Text> </Text>
+
+          <Text color="gray">
+            Note: Hooks are automatically installed by 'kb setup'
+          </Text>
+        </Box>
+      );
+
     case "tutorial":
       return (
         <Box flexDirection="column">
@@ -822,10 +963,13 @@ function getCommandHelp(command: string): JSX.Element {
           <Text> </Text>
           <Text>Available commands:</Text>
           <Box marginLeft={2} flexDirection="column">
+            <Text color="gray">• add</Text>
             <Text color="gray">• start</Text>
             <Text color="gray">• status</Text>
             <Text color="gray">• validate</Text>
             <Text color="gray">• ctx (or context)</Text>
+            <Text color="gray">• setup</Text>
+            <Text color="gray">• hooks</Text>
             <Text color="gray">• tutorial</Text>
             <Text color="gray">• version</Text>
             <Text color="gray">• help</Text>

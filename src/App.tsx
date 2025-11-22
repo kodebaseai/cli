@@ -9,6 +9,7 @@ import { Box, Text } from "ink";
 import type { FC } from "react";
 import { Add } from "./commands/Add.js";
 import { Context } from "./commands/Context.js";
+import { Hooks } from "./commands/Hooks.js";
 import { Setup } from "./commands/Setup.js";
 import { Start } from "./commands/Start.js";
 import { Status } from "./commands/Status.js";
@@ -264,6 +265,80 @@ export const App: FC<AppProps> = ({ args, verbose = false }) => {
         preset={preset}
         skipAuth={skipAuth}
         skipHooks={skipHooks}
+        force={force}
+        verbose={verbose}
+      />
+    );
+  }
+
+  // Handle hooks command
+  if (command === "hooks") {
+    // Parse subcommand (first non-flag argument)
+    const subcommand = commandArgs.find((arg) => !arg.startsWith("--"));
+
+    // Validate: subcommand is required
+    if (!subcommand) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={
+              new Error("Subcommand is required (execute, install, uninstall)")
+            }
+            verbose={verbose}
+          />
+          <Box marginTop={1}>
+            <Text color="gray" dimColor>
+              Usage: kb hooks &lt;execute|install|uninstall&gt; [options]
+            </Text>
+          </Box>
+        </Box>
+      );
+    }
+
+    // Validate subcommand
+    if (!["execute", "install", "uninstall"].includes(subcommand)) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={
+              new Error(
+                `Invalid subcommand: ${subcommand}. Must be one of: execute, install, uninstall`,
+              )
+            }
+            verbose={verbose}
+          />
+        </Box>
+      );
+    }
+
+    // Parse hook type (for execute subcommand)
+    const hookType = commandArgs[commandArgs.indexOf(subcommand) + 1];
+
+    // Validate: hook type is required for execute
+    if (subcommand === "execute" && !hookType) {
+      return (
+        <Box flexDirection="column">
+          <ErrorHandler
+            error={new Error("Hook type is required for execute subcommand")}
+            verbose={verbose}
+          />
+          <Box marginTop={1}>
+            <Text color="gray" dimColor>
+              Usage: kb hooks execute
+              &lt;post-merge|post-checkout|post-commit&gt;
+            </Text>
+          </Box>
+        </Box>
+      );
+    }
+
+    // Parse flags
+    const force = commandArgs.includes("--force");
+
+    return (
+      <Hooks
+        subcommand={subcommand as "execute" | "install" | "uninstall"}
+        hookType={hookType}
         force={force}
         verbose={verbose}
       />

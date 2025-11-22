@@ -5,7 +5,7 @@
 
 import { runCLI } from "./cli.js";
 
-export const version = "0.1.0-alpha.1";
+export const version = "1.0.1";
 
 // Parse command line arguments
 const args = process.argv.slice(2); // Remove node and script path
